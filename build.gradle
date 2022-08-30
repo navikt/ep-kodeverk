@@ -3,7 +3,6 @@ buildscript {
         springVersion = '5.3.22'
         kotlinVersion = '1.7.10'
         mockkVersion = '1.12.5'
-        logbackVersion = "1.4.0"
     }
 
     repositories {
@@ -70,7 +69,6 @@ tasks.sonarqube.dependsOn tasks["jacocoTestReport"]
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:${kotlinVersion}"))
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     compileOnly("javax.servlet:javax.servlet-api:4.0.1")
 
     // Spring Framework BOM-fil overstyrer så vi får siste patch-versjon av Spring Framework
