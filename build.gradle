@@ -71,6 +71,8 @@ dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:${kotlinVersion}"))
     compileOnly("javax.servlet:javax.servlet-api:4.0.1")
 
+    implementation("org.slf4j:slf4j-api:1.7.36")
+
     // Spring Framework BOM-fil overstyrer så vi får siste patch-versjon av Spring Framework
     implementation(platform("org.springframework:spring-framework-bom:${springVersion}"))
     implementation("org.springframework:spring-web")
