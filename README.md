@@ -1,6 +1,10 @@
 # ep-kodeverk
 Felles kodeverk-bibliotek for EESSI pensjon-applikasjoner
 
+Trenger miljø-variable - KODEVERK_URL og NAIS_APP_NAME
+
+Husk å sette `@EnableCaching` på Spring-applikasjonsklassen for å sikre at vi ikke henter kodeverk mange ganger. 
+
 ## Releasing
 
 This library is released using the `net.researchgate/gradle-release`-plugin.

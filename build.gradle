@@ -1,8 +1,10 @@
 buildscript {
     ext {
+        springBootVersion = '2.7.3'
         springVersion = '5.3.22'
         kotlinVersion = '1.7.10'
         mockkVersion = '1.12.5'
+        jacksonVersion = '2.13.3'
     }
 
     repositories {
@@ -29,10 +31,6 @@ group = "no.nav.eessi.pensjon"
 java {
     withJavadocJar()
     withSourcesJar()
-}
-
-repositories {
-    mavenCentral()
 }
 
 compileKotlin {
@@ -71,17 +69,26 @@ dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:${kotlinVersion}"))
     compileOnly("javax.servlet:javax.servlet-api:4.0.1")
 
-    implementation("org.slf4j:slf4j-api:1.7.36")
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}"))
+    implementation("org.springframework.boot:spring-boot")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
 
     // Spring Framework BOM-fil overstyrer så vi får siste patch-versjon av Spring Framework
     implementation(platform("org.springframework:spring-framework-bom:${springVersion}"))
     implementation("org.springframework:spring-web")
-    implementation("org.springframework:spring-context")
+    implementation("jakarta.annotation:jakarta.annotation-api")
 
-    testImplementation("javax.servlet:javax.servlet-api:4.0.1")
+    implementation("org.slf4j:slf4j-api:1.7.36")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+
+    implementation("no.nav.eessi.pensjon:ep-metrics:0.5.11")
+    implementation("no.nav.eessi.pensjon:ep-logging:1.0.34")
+
+    testImplementation("org.springframework:spring-test")
+
     testImplementation(platform("org.junit:junit-bom:5.9.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.springframework:spring-test")
     testImplementation("io.mockk:mockk:$mockkVersion")
 
 }
@@ -110,6 +117,22 @@ publishing {
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+
+    ["maven-release"].each { repo ->
+        String token = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key")
+        if (!token) throw new NullPointerException("Missing token, you have to set GITHUB_TOKEN or gpr.key, see README")
+        maven {
+            url = uri("https://maven.pkg.github.com/navikt/$repo")
+            credentials {
+                username = "token"
+                password = token
             }
         }
     }

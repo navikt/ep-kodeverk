@@ -27,7 +27,7 @@ class PostnummerService {
                 postalCodeTable[data.postnmmer] = data
             }
         }
-        logger.info("Har importert kodeverk fra $FILENAME")
+        logger.info("Har importert postnummer fra $FILENAME")
     }
 
     private data class PostData(
