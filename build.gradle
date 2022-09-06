@@ -4,7 +4,7 @@ buildscript {
         springVersion = '5.3.22'
         kotlinVersion = '1.7.10'
         mockkVersion = '1.12.5'
-        jacksonVersion = '2.13.3'
+        jacksonVersion = '2.13.4'
     }
 
     repositories {
