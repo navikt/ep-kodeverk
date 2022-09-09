@@ -5,6 +5,7 @@ buildscript {
         kotlinVersion = '1.7.10'
         mockkVersion = '1.12.5'
         jacksonVersion = '2.13.4'
+        tokenSupportVersion = '2.1.3'
     }
 
     repositories {
@@ -81,6 +82,8 @@ dependencies {
     implementation("org.slf4j:slf4j-api:1.7.36")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+
+    implementation("no.nav.security:token-client-spring:${tokenSupportVersion}")
 
     implementation("no.nav.eessi.pensjon:ep-metrics:0.5.11")
     implementation("no.nav.eessi.pensjon:ep-logging:1.0.39")
