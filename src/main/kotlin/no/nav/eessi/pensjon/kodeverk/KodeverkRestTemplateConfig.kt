@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate
 
 @Configuration
 @PropertySource("classpath:/application-kodeverk.yml")
-class RestTemplateConfig(
+class KodeverkRestTemplateConfig(
     private val clientConfigurationProperties: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService?
 ) {
