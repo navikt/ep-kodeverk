@@ -1,7 +1,7 @@
 # ep-kodeverk
 Felles kodeverk-bibliotek for EESSI pensjon-applikasjoner
 
-Trenger miljø-variable - KODEVERK_URL, NAIS_APP_NAME, AZURE_APP_KODEVERK_CLIENT_ID
+Trenger miljø-variabel `KODEVERK_URL`, samt `no.nav.security.jwt.client.registration.kodeverk-credentials` satt. 
 
 Husk å sette `@EnableCaching` på Spring-applikasjonsklassen for å sikre at vi ikke henter kodeverk mange ganger. 
 
