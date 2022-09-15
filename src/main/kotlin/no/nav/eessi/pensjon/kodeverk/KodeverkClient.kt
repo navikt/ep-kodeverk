@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -24,6 +25,7 @@ import javax.annotation.PostConstruct
 
 @Component
 @CacheConfig
+@Profile("!excludeKodeverk")
 class KodeverkClient(
     private val kodeverkRestTemplate: RestTemplate,
     @Value("\${NAIS_APP_NAME}") private val appName: String,

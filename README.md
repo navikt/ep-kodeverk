@@ -3,7 +3,10 @@ Felles kodeverk-bibliotek for EESSI pensjon-applikasjoner
 
 Trenger miljø-variabel `KODEVERK_URL`, samt `no.nav.security.jwt.client.registration.kodeverk-credentials` satt. 
 
-Husk å sette `@EnableCaching` på Spring-applikasjonsklassen for å sikre at vi ikke henter kodeverk mange ganger. 
+Husk å sette `@EnableCaching` på Spring-applikasjonsklassen for å sikre at vi ikke henter kodeverk mange ganger.
+
+For Spring-baserte tester kan man unngå at komponentene lastes ved å sette `@ActiveProfiles("excludeKodeverk")` -
+da må man selv legge til mocks/fakes/dummies.
 
 ## Releasing
 
