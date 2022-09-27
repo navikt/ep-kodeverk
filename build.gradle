@@ -8,8 +8,8 @@ buildscript {
     }
 }
 
-apply from: "https://raw.githubusercontent.com/navikt/ep-script-plugins/release-0.3.0/ep-module.gradle"
-apply from: "https://raw.githubusercontent.com/navikt/ep-script-plugins/release-0.3.0/ep-library.gradle"
+apply from: "https://raw.githubusercontent.com/navikt/ep-script-plugins/release-0.4.0/ep-module.gradle"
+apply from: "https://raw.githubusercontent.com/navikt/ep-script-plugins/release-0.4.0/ep-library.gradle"
 
 group = "no.nav.eessi.pensjon"
 
