@@ -24,7 +24,6 @@ import java.util.*
 import javax.annotation.PostConstruct
 
 @Component
-@CacheConfig
 @Profile("!excludeKodeverk")
 class KodeverkClient(
     private val kodeverkRestTemplate: RestTemplate,
