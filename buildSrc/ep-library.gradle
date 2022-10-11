@@ -19,9 +19,8 @@ java {
     withSourcesJar()
 }
 
-// https://github.com/researchgate/gradle-release
 release {
-    newVersionCommitMessage = "[Release Plugin] - next version commit: "
+    newVersionCommitMessage = "P - [Release Plugin] - next version commit: "
     tagTemplate = "release-\${version}"
     git {
         requireBranch.set('main')
