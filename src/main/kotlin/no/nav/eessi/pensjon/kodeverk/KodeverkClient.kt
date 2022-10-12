@@ -6,7 +6,6 @@ import no.nav.eessi.pensjon.utils.toJson
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpEntity
@@ -44,7 +43,7 @@ class KodeverkClient(
 
     fun hentLandkoderAlpha2() = hentLandKoder().map { it.landkode2 }
 
-    @Cacheable("kodeverk")
+    @Cacheable("kodeverk", key = "#root.methodName")
     fun hentLandKoder(): List<Landkode> {
         return KodeverkHentLandKode.measure {
             val tmpLandkoder = hentHierarki("LandkoderSammensattISO2")
