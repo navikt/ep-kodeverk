@@ -43,7 +43,6 @@ class KodeverkClient(
 
     fun hentLandkoderAlpha2() = hentLandKoder().map { it.landkode2 }
 
-    @Cacheable("kodeverk", key = "#root.methodName")
     fun hentLandKoder(): List<Landkode> {
         return KodeverkHentLandKode.measure {
             val tmpLandkoder = hentHierarki("LandkoderSammensattISO2")
@@ -60,6 +59,7 @@ class KodeverkClient(
         }
     }
 
+    @Cacheable(cacheNames = ["kodeverk"], cacheManager = "cacheManager")
     fun finnLandkode(landkode: String): String? {
 
         if (landkode.isNullOrEmpty() || landkode.length !in 2..3) {
