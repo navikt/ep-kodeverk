@@ -23,11 +23,14 @@ class KodeverkClientTest {
 
     private val mockrestTemplate: RestTemplate = mockk()
 
-    private lateinit var kodeverkClient: KodeverkClient
+    private lateinit var kodeverkService: KodeverkClient
+    private lateinit var kodeverkClient: KodeVerkHentLandkoder
 
     @BeforeEach
     fun setup() {
-        kodeverkClient = KodeverkClient(mockrestTemplate, "eessi-fagmodul")
+        kodeverkClient = KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate)
+        kodeverkService = KodeverkClient(kodeVerkHentLandkoder = kodeverkClient)
+
         kodeverkClient.initMetrics()
 
         val mockResponseEntityISO3 =
@@ -48,7 +51,7 @@ class KodeverkClientTest {
     @MethodSource("landkoder")
     fun `henting av landkode ved bruk av landkode `(expected: String, landkode: String) {
 
-        val actual = kodeverkClient.finnLandkode(landkode)
+        val actual = kodeverkService.finnLandkode(landkode)
 
         Assertions.assertEquals(expected, actual)
     }
@@ -64,7 +67,7 @@ class KodeverkClientTest {
 
     @Test
     fun testerLankodeMed2Siffer() {
-        val actual = kodeverkClient.hentLandkoderAlpha2()
+        val actual = kodeverkService.hentLandkoderAlpha2()
 
         Assertions.assertEquals("ZW", actual.last())
         Assertions.assertEquals(249, actual.size)
@@ -72,7 +75,7 @@ class KodeverkClientTest {
 
     @Test
     fun henteAlleLandkoderReturnererAlleLandkoder() {
-        val json = kodeverkClient.hentAlleLandkoder()
+        val json = kodeverkService.hentAlleLandkoder()
 
         val list = mapJsonToAny(json, typeRefs<List<Landkode>>())
 
@@ -87,7 +90,7 @@ class KodeverkClientTest {
         val landkode2 = "BMUL"
 
         val exception = assertThrows<LandkodeException> {
-            kodeverkClient.finnLandkode(landkode2)
+            kodeverkService.finnLandkode(landkode2)
 
         }
         Assertions.assertEquals("400 BAD_REQUEST \"Ugyldig landkode: BMUL\"", exception.message)
