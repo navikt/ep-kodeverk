@@ -6,11 +6,13 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+internal const val KODEVERK_CACHE = "kodeverk"
+
 @Configuration
 @EnableCaching
 class KodeverkCacheConfig {
     @Bean
     fun cacheManager(): CacheManager {
-        return ConcurrentMapCacheManager("kodeverk")
+        return ConcurrentMapCacheManager(KODEVERK_CACHE)
     }
 }

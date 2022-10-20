@@ -54,6 +54,7 @@ class LandkodeException(message: String) : ResponseStatusException(HttpStatus.BA
 
 
 @Component
+@Profile("!excludeKodeverk")
 class KodeVerkHentLandkoder(
     @Value("\${NAIS_APP_NAME}") val appName: String,
     private val kodeverkRestTemplate: RestTemplate,
@@ -66,7 +67,7 @@ class KodeVerkHentLandkoder(
     fun initMetrics() {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
     }
-    @Cacheable(cacheNames = ["kodeverk"], key = "#root.methodName")
+    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName")
     fun hentLandKoder(): List<Landkode> {
         return kodeverkMetrics.measure {
 
