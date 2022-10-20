@@ -25,26 +25,52 @@ import javax.annotation.PostConstruct
 @Component
 @Profile("!excludeKodeverk")
 class KodeverkClient(
+    @Autowired private val kodeVerkHentLandkoder: KodeVerkHentLandkoder)
+{
+    fun hentAlleLandkoder() = kodeVerkHentLandkoder.hentLandKoder().toJson()
+
+    fun hentLandkoderAlpha2() = kodeVerkHentLandkoder.hentLandKoder().map { it.landkode2 }
+
+    fun finnLandkode(landkode: String): String? {
+
+        if (landkode.isNullOrEmpty() || landkode.length !in 2..3) {
+            throw LandkodeException("Ugyldig landkode: $landkode")
+        }
+        return when (landkode.length) {
+            2 -> kodeVerkHentLandkoder.hentLandKoder().firstOrNull { it.landkode2 == landkode }?.landkode3
+            3 -> kodeVerkHentLandkoder.hentLandKoder().firstOrNull { it.landkode3 == landkode }?.landkode2
+            else -> throw LandkodeException("Ugyldig landkode: $landkode")
+        }
+    }
+}
+
+data class Landkode(
+    val landkode2: String, // SE
+    val landkode3: String // SWE
+)
+
+class KodeverkException(message: String) : ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message)
+class LandkodeException(message: String) : ResponseStatusException(HttpStatus.BAD_REQUEST, message)
+
+
+@Component
+@Profile("!excludeKodeverk")
+class KodeVerkHentLandkoder(
+    @Value("\${NAIS_APP_NAME}") val appName: String,
     private val kodeverkRestTemplate: RestTemplate,
-    @Value("\${NAIS_APP_NAME}") private val appName: String,
     @Autowired(required = false) private val metricsHelper: MetricsHelper = MetricsHelper.ForTest()
 ) {
+    lateinit var kodeverkMetrics: MetricsHelper.Metric
 
-    private val logger = LoggerFactory.getLogger(KodeverkClient::class.java)
-
-    private lateinit var KodeverkHentLandKode: MetricsHelper.Metric
-
+    private val logger = LoggerFactory.getLogger(KodeVerkHentLandkoder::class.java)
     @PostConstruct
     fun initMetrics() {
-        KodeverkHentLandKode = metricsHelper.init("KodeverkHentLandKode")
+        kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
     }
-
-    fun hentAlleLandkoder() = hentLandKoder().toJson()
-
-    fun hentLandkoderAlpha2() = hentLandKoder().map { it.landkode2 }
-
+    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName")
     fun hentLandKoder(): List<Landkode> {
-        return KodeverkHentLandKode.measure {
+        return kodeverkMetrics.measure {
+
             val tmpLandkoder = hentHierarki("LandkoderSammensattISO2")
 
             val rootNode = jacksonObjectMapper().readTree(tmpLandkoder)
@@ -58,20 +84,6 @@ class KodeverkClient(
             }.sortedBy { (sorting, _) -> sorting }.toList()
         }
     }
-
-    @Cacheable(cacheNames = ["kodeverk"], cacheManager = "cacheManager")
-    fun finnLandkode(landkode: String): String? {
-
-        if (landkode.isNullOrEmpty() || landkode.length !in 2..3) {
-            throw LandkodeException("Ugyldig landkode: $landkode")
-        }
-        return when (landkode.length) {
-            2 -> hentLandKoder().firstOrNull { it.landkode2 == landkode }?.landkode3
-            3 -> hentLandKoder().firstOrNull { it.landkode3 == landkode }?.landkode2
-            else -> throw LandkodeException("Ugyldig landkode: $landkode")
-        }
-    }
-
 
     private fun doRequest(builder: UriComponents): String {
         try {
@@ -113,12 +125,4 @@ class KodeverkClient(
         return doRequest(builder)
     }
 }
-
-data class Landkode(
-    val landkode2: String, // SE
-    val landkode3: String // SWE
-)
-
-class KodeverkException(message: String) : ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message)
-class LandkodeException(message: String) : ResponseStatusException(HttpStatus.BAD_REQUEST, message)
 
