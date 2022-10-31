@@ -81,7 +81,9 @@ class KodeVerkHentLandkoder(
                     node.at("/kode").textValue(),
                     node.at("/undernoder").findPath("kode").textValue()
                 )
-            }.sortedBy { (sorting, _) -> sorting }.toList()
+            }.sortedBy { (sorting, _) -> sorting }.toList().also {
+                logger.info("Har importert landkoder")
+            }
         }
     }
 
