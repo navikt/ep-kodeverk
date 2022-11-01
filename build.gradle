@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '2.7.4'
+        springBootVersion = '2.7.5'
         springVersion = '5.3.23'
         mockkVersion = '1.12.5'
         jacksonVersion = '2.13.4'
