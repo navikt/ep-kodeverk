@@ -4,7 +4,7 @@ buildscript {
         springVersion = '5.3.23'
         mockkVersion = '1.12.5'
         jacksonVersion = '2.13.4'
-        tokenSupportVersion = '2.1.6'
+        tokenSupportVersion = '2.1.7'
     }
 }
 
