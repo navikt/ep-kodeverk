@@ -67,7 +67,7 @@ class KodeVerkHentLandkoder(
     fun initMetrics() {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
     }
-    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName")
+    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentLandKoder(): List<Landkode> {
         return kodeverkMetrics.measure {
 

@@ -11,7 +11,8 @@ internal const val KODEVERK_CACHE = "kodeverk"
 @Configuration
 @EnableCaching
 class KodeverkCacheConfig {
-    @Bean
+
+    @Bean("kodeverkCacheManager")
     fun cacheManager(): CacheManager {
         return ConcurrentMapCacheManager(KODEVERK_CACHE)
     }
