@@ -31,7 +31,7 @@ dependencies {
 
     implementation("no.nav.security:token-client-spring:${tokenSupportVersion}")
 
-    implementation("no.nav.eessi.pensjon:ep-metrics:0.5.28")
+    implementation("no.nav.eessi.pensjon:ep-metrics:1.0.1")
     implementation("no.nav.eessi.pensjon:ep-logging:1.1.6")
 
     testImplementation("org.springframework:spring-test")
