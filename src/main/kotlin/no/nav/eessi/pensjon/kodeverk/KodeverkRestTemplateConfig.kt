@@ -2,6 +2,7 @@ package no.nav.eessi.pensjon.kodeverk
 
 import no.nav.eessi.pensjon.logging.RequestIdHeaderInterceptor
 import no.nav.eessi.pensjon.logging.RequestResponseLoggerInterceptor
+import no.nav.eessi.pensjon.shared.retry.IOExceptionRetryInterceptor
 import no.nav.security.token.support.client.core.ClientProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
@@ -37,6 +38,7 @@ class KodeverkRestTemplateConfig(
             .errorHandler(DefaultResponseErrorHandler())
             .additionalInterceptors(
                 RequestIdHeaderInterceptor(),
+                IOExceptionRetryInterceptor(),
                 RequestResponseLoggerInterceptor(),
                 bearerTokenInterceptor(clientProperties("kodeverk-credentials"), oAuth2AccessTokenService!!)
             )
