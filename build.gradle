@@ -24,7 +24,7 @@ dependencies {
     implementation("org.springframework:spring-web")
     implementation("jakarta.annotation:jakarta.annotation-api")
 
-    implementation("org.slf4j:slf4j-api:2.0.3")
+    implementation("org.slf4j:slf4j-api:2.0.6")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
