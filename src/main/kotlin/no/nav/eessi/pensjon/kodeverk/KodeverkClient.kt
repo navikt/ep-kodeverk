@@ -1,8 +1,9 @@
 package no.nav.eessi.pensjon.kodeverk
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.eessi.pensjon.metrics.MetricsHelper
-import no.nav.eessi.pensjon.utils.toJson
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -41,6 +42,19 @@ class KodeverkClient(
             3 -> kodeVerkHentLandkoder.hentLandKoder().firstOrNull { it.landkode3 == landkode }?.landkode2
             else -> throw LandkodeException("Ugyldig landkode: $landkode")
         }
+    }
+
+    companion object{
+        fun mapAnyToJson(data: Any): String {
+            return mapperWithJavaTime()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(data)
+        }
+
+        fun mapperWithJavaTime(): ObjectMapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+
+        fun Any.toJson() = mapAnyToJson(this)
     }
 }
 

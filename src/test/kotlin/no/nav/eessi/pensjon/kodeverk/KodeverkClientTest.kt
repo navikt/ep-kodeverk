@@ -1,9 +1,9 @@
 package no.nav.eessi.pensjon.kodeverk
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.eessi.pensjon.utils.mapJsonToAny
-import no.nav.eessi.pensjon.utils.typeRefs
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -77,7 +77,7 @@ class KodeverkClientTest {
     fun henteAlleLandkoderReturnererAlleLandkoder() {
         val json = kodeverkService.hentAlleLandkoder()
 
-        val list = mapJsonToAny(json, typeRefs<List<Landkode>>())
+        val list = mapJsonToAny<List<Landkode>>(json)
 
         Assertions.assertEquals(249, list.size)
 
@@ -94,6 +94,12 @@ class KodeverkClientTest {
 
         }
         Assertions.assertEquals("400 BAD_REQUEST \"Ugyldig landkode: BMUL\"", exception.message)
+    }
+
+    inline fun <reified T : Any> mapJsonToAny(json: String): T {
+        return KodeverkClient.mapperWithJavaTime()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
+            .readValue(json, object : TypeReference<T>() {})
     }
 
     private fun createResponseEntityFromJsonFile(
