@@ -1,8 +1,8 @@
 buildscript {
     ext {
-        springBootVersion = '2.7.5'
+        springBootVersion = '3.0.2'
         jacksonVersion = '2.14.1'
-        tokenSupportVersion = '2.1.8'
+        tokenSupportVersion = '3.0.3'
     }
 }
 

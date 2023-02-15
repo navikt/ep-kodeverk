@@ -3,6 +3,7 @@ package no.nav.eessi.pensjon.kodeverk
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import jakarta.annotation.PostConstruct
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.util.UriComponents
 import org.springframework.web.util.UriComponentsBuilder
 import java.util.*
-import javax.annotation.PostConstruct
 
 @Component
 @Profile("!excludeKodeverk")
