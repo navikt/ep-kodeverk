@@ -35,7 +35,7 @@ dependencies {
         exclude module: "mockito-core"
         exclude module: 'junit-vintage-engine'
     }
-    testImplementation(platform("org.junit:junit-bom:5.9.2"))
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.mockk:mockk:1.13.5")
 }
