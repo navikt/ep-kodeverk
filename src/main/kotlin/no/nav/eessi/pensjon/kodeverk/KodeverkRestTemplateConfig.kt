@@ -11,7 +11,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.context.annotation.PropertySource
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.BufferingClientHttpRequestFactory
 import org.springframework.http.client.ClientHttpRequestExecution
@@ -22,7 +21,7 @@ import org.springframework.web.client.RestTemplate
 
 
 @Configuration
-@Profile("!excludeKodeverk")
+@Profile("!excludeKodeverk", "prod")
 class KodeverkRestTemplateConfig(
     private val clientConfigurationProperties: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService?
