@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate
 
 
 @Configuration
-@Profile("!excludeKodeverk", "!prod")
+@Profile("!excludeKodeverk", "test")
 class KodeverkRestTemplateConfigPreProd {
 
     @Value("\${KODEVERK_URL}")
