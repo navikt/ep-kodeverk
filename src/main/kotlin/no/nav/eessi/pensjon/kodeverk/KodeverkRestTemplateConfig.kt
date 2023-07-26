@@ -45,6 +45,7 @@ class KodeverkRestTemplateConfig(
             RequestResponseLoggerInterceptor()
         )
 
+        //Det er kun prod som trenger auth token
         if(env.activeProfiles[0] == "prod") {
             template.additionalInterceptors(
                 interceptors.plus(bearerTokenInterceptor(clientProperties("kodeverk-credentials"), oAuth2AccessTokenService!!))
