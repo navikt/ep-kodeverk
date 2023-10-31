@@ -15,6 +15,7 @@ class PostnummerServiceTest {
     @BeforeEach
     fun setup() {
         service = PostnummerService()
+        service.initMetrics()
     }
 
     @ParameterizedTest(name = "Henter postkode: {0}, for poststed: {1}")
