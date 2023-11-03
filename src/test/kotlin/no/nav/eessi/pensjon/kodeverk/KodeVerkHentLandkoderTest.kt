@@ -60,7 +60,7 @@ class KodeVerkHentLandkoderTest {
     class Config {
         @Bean
         fun kodeVerkHentLandkoder(): KodeVerkHentLandkoder {
-            return KodeVerkHentLandkoder("testApp", restTemplate, MetricsHelper.ForTest()).apply { initMetrics() }
+            return KodeVerkHentLandkoder("testApp", restTemplate, MetricsHelper.ForTest())
         }
         @Bean
         fun kodeverkClient(): KodeverkClient {

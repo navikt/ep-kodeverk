@@ -3,7 +3,6 @@ package no.nav.eessi.pensjon.kodeverk
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import jakarta.annotation.PostConstruct
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,8 +76,8 @@ class KodeVerkHentLandkoder(
     lateinit var kodeverkMetrics: MetricsHelper.Metric
 
     private val logger = LoggerFactory.getLogger(KodeVerkHentLandkoder::class.java)
-    @PostConstruct
-    fun initMetrics() {
+
+    init {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
     }
     @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")

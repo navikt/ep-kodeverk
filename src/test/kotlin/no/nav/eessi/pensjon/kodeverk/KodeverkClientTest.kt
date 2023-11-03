@@ -31,8 +31,6 @@ class KodeverkClientTest {
         kodeverkClient = KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate)
         kodeverkService = KodeverkClient(kodeVerkHentLandkoder = kodeverkClient)
 
-        kodeverkClient.initMetrics()
-
         val mockResponseEntityISO3 =
             createResponseEntityFromJsonFile("src/test/resources/no/nav/eessi/pensjon/kodeverk/landkoderSammensattIso2.json")
 

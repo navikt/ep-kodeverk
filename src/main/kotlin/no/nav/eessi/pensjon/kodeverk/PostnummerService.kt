@@ -1,6 +1,5 @@
 package no.nav.eessi.pensjon.kodeverk
 
-import jakarta.annotation.PostConstruct
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,8 +18,7 @@ class PostnummerService(
 
     private lateinit var postNummerMetric: MetricsHelper.Metric
 
-    @PostConstruct
-    fun initMetrics() {
+    init {
         postNummerMetric = metricsHelper.init("PostnummerServiceMetric")
     }
 
