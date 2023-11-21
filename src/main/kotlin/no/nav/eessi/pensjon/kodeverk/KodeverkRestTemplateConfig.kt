@@ -57,7 +57,7 @@ class KodeverkRestTemplateConfig(
 
         return template.build().apply {
             requestFactory = BufferingClientHttpRequestFactory(
-                SimpleClientHttpRequestFactory().apply { setOutputStreaming(false) }
+                SimpleClientHttpRequestFactory()
             )
         }
     }
