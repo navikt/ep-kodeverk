@@ -14,7 +14,7 @@ class PostnummerService(
     @Autowired(required = false) private val metricsHelper: MetricsHelper = MetricsHelper.ForTest()
 ) {
     private val logger: Logger by lazy { LoggerFactory.getLogger(PostnummerService::class.java) }
-    private val postalCodeTable: MutableMap<String?, PostData>
+    private val postalCodeTable: MutableMap<String?, PostData> = HashMap()
 
     private lateinit var postNummerMetric: MetricsHelper.Metric
 
@@ -23,7 +23,6 @@ class PostnummerService(
     }
 
     init {
-        postalCodeTable = HashMap()
         val resource = this.javaClass.getResourceAsStream(FILENAME)
         val br = BufferedReader(InputStreamReader(resource, "UTF-8"))
         var line: String? = ""
