@@ -48,7 +48,12 @@ class KodeverkRestTemplateConfig(
         //Det er kun prod som trenger auth token
         if(env.activeProfiles[0] == "prod") {
             template.additionalInterceptors(
-                interceptors.plus(bearerTokenInterceptor(clientProperties("kodeverk-credentials"), oAuth2AccessTokenService!!))
+                interceptors.plus(
+                    bearerTokenInterceptor(
+                        clientConfigurationProperties.registration["kodeverk-credentials"]
+                            ?: throw RuntimeException("could not find oauth2 client config for ${"kodeverk-credentials"}"),
+                        oAuth2AccessTokenService!!
+                    ))
             )
         }
         else{
@@ -62,10 +67,6 @@ class KodeverkRestTemplateConfig(
         }
     }
 
-
-    private fun clientProperties(oAuthKey: String): ClientProperties =
-        clientConfigurationProperties.registration[oAuthKey]
-            ?: throw RuntimeException("could not find oauth2 client config for $oAuthKey")
 
     private fun bearerTokenInterceptor(
         clientProperties: ClientProperties,
