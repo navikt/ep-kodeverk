@@ -4,6 +4,9 @@ buildscript {
         springBootVersion = '3.3.4'
         jacksonModuleKotlinVersion = '2.17.2'
         tokenSupportVersion = '5.0.5'
+
+        //test
+        jupiterVersion = '5.11.2'
     }
 }
 plugins {
@@ -40,7 +43,7 @@ dependencies {
         exclude module: "mockito-core"
         exclude module: 'junit-vintage-engine'
     }
-    testImplementation(platform("org.junit:junit-bom:5.11.2"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(platform("org.junit:junit-bom:$jupiterVersion"))
+    testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
     testImplementation("io.mockk:mockk:1.13.13")
 }
