@@ -27,6 +27,7 @@ dependencies {
     implementation("org.springframework:spring-web")
 
     implementation("org.slf4j:slf4j-api:2.0.13")
+
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonModuleKotlinVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonModuleKotlinVersion")
 
