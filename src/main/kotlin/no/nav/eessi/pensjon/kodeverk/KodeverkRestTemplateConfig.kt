@@ -1,11 +1,17 @@
 package no.nav.eessi.pensjon.kodeverk
 
+import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
+import no.nav.common.token_client.client.AzureAdOnBehalfOfTokenClient
 import no.nav.eessi.pensjon.logging.RequestIdHeaderInterceptor
 import no.nav.eessi.pensjon.logging.RequestResponseLoggerInterceptor
 import no.nav.eessi.pensjon.shared.retry.IOExceptionRetryInterceptor
 import no.nav.security.token.support.client.core.ClientProperties
 import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
 import no.nav.security.token.support.client.spring.ClientConfigurationProperties
+import no.nav.security.token.support.core.context.TokenValidationContextHolder
+import no.nav.security.token.support.core.jwt.JwtToken
+import no.nav.security.token.support.core.jwt.JwtTokenClaims
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -20,6 +26,9 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.DefaultResponseErrorHandler
 import org.springframework.web.client.RestTemplate
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 
 @Configuration
@@ -27,8 +36,10 @@ import org.springframework.web.client.RestTemplate
 class KodeverkRestTemplateConfig(
     private val clientConfigurationProperties: ClientConfigurationProperties,
     private val oAuth2AccessTokenService: OAuth2AccessTokenService?,
+    private val tokenValidationContextHolder: TokenValidationContextHolder,
     @Autowired private val env: Environment
 ) {
+    private val logger = LoggerFactory.getLogger(KodeverkRestTemplateConfig::class.java)
 
     @Value("\${KODEVERK_URL}")
     lateinit var kodeverkUrl: String
@@ -46,18 +57,20 @@ class KodeverkRestTemplateConfig(
         )
 
         //Det er kun prod som trenger auth token
-        if(env.activeProfiles[0] == "prod") {
+        if (env.activeProfiles[0] == "prod") {
             template.additionalInterceptors(
                 interceptors.plus(
                     bearerTokenInterceptor(
                         clientConfigurationProperties.registration["kodeverk-credentials"]
                             ?: throw RuntimeException("could not find oauth2 client config for ${"kodeverk-credentials"}"),
                         oAuth2AccessTokenService!!
-                    ))
+                    )
+                )
             )
-        }
-        else{
-            template.additionalInterceptors(interceptors)
+        } else {
+            template.additionalInterceptors(
+                interceptors.plus(onBehalfOfBearerTokenInterceptor("kodeverk-credentials"))
+            )
         }
 
         return template.build().apply {
@@ -79,4 +92,54 @@ class KodeverkRestTemplateConfig(
         }
     }
 
+    private fun onBehalfOfBearerTokenInterceptor(clientId: String): ClientHttpRequestInterceptor {
+        logger.info("init onBehalfOfBearerTokenInterceptor: $clientId")
+        return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray?, execution: ClientHttpRequestExecution ->
+            val decodedToken =
+                URLDecoder.decode(getToken(tokenValidationContextHolder).encodedToken, StandardCharsets.UTF_8)
+
+            logger.debug("NAVIdent: ${getClaims(tokenValidationContextHolder).get("NAVident")?.toString()}")
+
+            val tokenClient: AzureAdOnBehalfOfTokenClient = AzureAdTokenClientBuilder.builder()
+                .withNaisDefaults()
+                .buildOnBehalfOfTokenClient()
+
+            val accessToken: String = tokenClient.exchangeOnBehalfOfToken(
+                "api://$clientId/.default",
+                decodedToken
+            )
+
+            request.headers.setBearerAuth(accessToken)
+            execution.execute(request, body!!)
+        }
+    }
+
+    fun getClaims(tokenValidationContextHolder: TokenValidationContextHolder): JwtTokenClaims {
+        val context = tokenValidationContextHolder.getTokenValidationContext()
+        if (context.issuers.isEmpty())
+            throw RuntimeException("No issuer found in context")
+
+        val validIssuer = context.issuers.filterNot { issuer ->
+            val oidcClaims = context.getClaims(issuer)
+            oidcClaims.expirationTime.before(Date())
+        }.map { it }
+
+
+        if (validIssuer.isNotEmpty()) {
+            val issuer = validIssuer.first()
+            return context.getClaims(issuer)
+        }
+        throw RuntimeException("No valid issuer found in context")
+
+    }
+
+    fun getToken(tokenValidationContextHolder: TokenValidationContextHolder): JwtToken {
+        val context = tokenValidationContextHolder.getTokenValidationContext()
+        if (context.issuers.isEmpty())
+            throw RuntimeException("No issuer found in context")
+        val issuer = context.issuers.first()
+
+        return context.getJwtToken(issuer)!!
+
+    }
 }
