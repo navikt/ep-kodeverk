@@ -37,20 +37,20 @@ class KodeVerkHentLandkoderTest {
         } returns ResponseEntity("", HttpStatus.OK)
     }
 
-//    @Test
-//    fun `kodeverk skal cache henting av landkoder`() {
-//        kodeverkClient.hentAlleLandkoder()
-//        kodeverkClient.hentAlleLandkoder()
-//
-//        verify (exactly = 1) { restTemplate
-//            .exchange(
-//                eq(LANDKODE_URL),
-//                any(),
-//                any<HttpEntity<Unit>>(),
-//                eq(String::class.java)
-//            )
-//        }
-//    }
+    @Test
+    fun `kodeverk skal cache henting av landkoder`() {
+        kodeverkClient.hentAlleLandkoder()
+        kodeverkClient.hentAlleLandkoder()
+
+        verify (exactly = 1) { restTemplate
+            .exchange(
+                eq(LANDKODE_URL),
+                any(),
+                any<HttpEntity<Unit>>(),
+                eq(String::class.java)
+            )
+        }
+    }
 
     companion object {
         var restTemplate: RestTemplate = mockk()
