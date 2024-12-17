@@ -80,7 +80,7 @@ class KodeVerkHentLandkoder(
     init {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
     }
-    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
+    //@Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentLandKoder(): List<Landkode> {
         return kodeverkMetrics.measure {
 
@@ -112,7 +112,7 @@ class KodeVerkHentLandkoder(
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
-            )
+            ).also { logger.info("KodeverkClient; response : $it") }
 
             return response.body ?: throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
 
