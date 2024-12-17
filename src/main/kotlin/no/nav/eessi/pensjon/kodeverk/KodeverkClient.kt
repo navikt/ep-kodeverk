@@ -112,7 +112,7 @@ class KodeVerkHentLandkoder(
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
-            ).also { logger.info("KodeverkClient; response : $it") }
+            ).also { logger.debug("KodeverkClient; response : $it") }
 
             return response.body ?: throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
 
