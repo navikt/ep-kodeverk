@@ -5,9 +5,6 @@ import no.nav.common.token_client.client.AzureAdOnBehalfOfTokenClient
 import no.nav.eessi.pensjon.logging.RequestIdHeaderInterceptor
 import no.nav.eessi.pensjon.logging.RequestResponseLoggerInterceptor
 import no.nav.eessi.pensjon.shared.retry.IOExceptionRetryInterceptor
-import no.nav.security.token.support.client.core.ClientProperties
-import no.nav.security.token.support.client.core.oauth2.OAuth2AccessTokenService
-import no.nav.security.token.support.client.spring.ClientConfigurationProperties
 import no.nav.security.token.support.core.context.TokenValidationContextHolder
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.security.token.support.core.jwt.JwtTokenClaims
@@ -30,12 +27,9 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.util.*
 
-
 @Configuration
 @Profile("!excludeKodeverk")
 class KodeverkRestTemplateConfig(
-    private val clientConfigurationProperties: ClientConfigurationProperties,
-    private val oAuth2AccessTokenService: OAuth2AccessTokenService?,
     private val tokenValidationContextHolder: TokenValidationContextHolder,
     @Autowired private val env: Environment
 ) {
@@ -63,18 +57,6 @@ class KodeverkRestTemplateConfig(
             requestFactory = BufferingClientHttpRequestFactory(
                 SimpleClientHttpRequestFactory()
             )
-        }
-    }
-
-
-    private fun bearerTokenInterceptor(
-        clientProperties: ClientProperties,
-        oAuth2AccessTokenService: OAuth2AccessTokenService
-    ): ClientHttpRequestInterceptor {
-        return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray?, execution: ClientHttpRequestExecution ->
-            val response = oAuth2AccessTokenService.getAccessToken(clientProperties)
-            request.headers.setBearerAuth(response.access_token!!)
-            execution.execute(request, body!!)
         }
     }
 
