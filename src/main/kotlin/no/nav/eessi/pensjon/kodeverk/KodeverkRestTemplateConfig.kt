@@ -79,6 +79,7 @@ class KodeverkRestTemplateConfig(
                 "api://$clientId/.default",
                 decodedToken
             )
+            logger.debug("Access token: $accessToken")
 
             request.headers.setBearerAuth(accessToken)
             execution.execute(request, body!!)
