@@ -64,10 +64,9 @@ class KodeverkRestTemplateConfig(
     }
 
     private fun onBehalfOfBearerTokenInterceptor(clientId: String): ClientHttpRequestInterceptor {
-        logger.info("init onBehalfOfBearerTokenInterceptor: $clientId")
+        logger.info("init onBehalfOfBearerTokenInterceptor kodeverk: $clientId")
         return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray?, execution: ClientHttpRequestExecution ->
-            val decodedToken =
-                URLDecoder.decode(getToken(tokenValidationContextHolder).encodedToken, StandardCharsets.UTF_8)
+            val decodedToken = URLDecoder.decode(getToken(tokenValidationContextHolder).encodedToken, StandardCharsets.UTF_8)
 
             logger.debug("NAVIdent: ${getClaims(tokenValidationContextHolder).get("NAVident")?.toString()}")
 
