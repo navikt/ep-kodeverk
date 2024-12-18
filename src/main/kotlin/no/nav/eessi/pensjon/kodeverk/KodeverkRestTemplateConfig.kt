@@ -38,6 +38,9 @@ class KodeverkRestTemplateConfig(
     @Value("\${KODEVERK_URL}")
     lateinit var kodeverkUrl: String
 
+    @Value("\${AZURE_APP_KODEVERK_CLIENT_ID}")
+    lateinit var kodeverkClientId: String
+
     @Bean
     fun kodeverkRestTemplate(): RestTemplate {
         val template = RestTemplateBuilder()
@@ -50,7 +53,7 @@ class KodeverkRestTemplateConfig(
             RequestResponseLoggerInterceptor()
         )
         template.additionalInterceptors(
-            interceptors.plus(onBehalfOfBearerTokenInterceptor("kodeverk-credentials"))
+            interceptors.plus(onBehalfOfBearerTokenInterceptor(kodeverkClientId))
         )
 
         return template.build().apply {
