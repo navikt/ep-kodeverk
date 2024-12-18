@@ -34,6 +34,7 @@ class KodeverkRestTemplateConfig(
     @Autowired private val env: Environment
 ) {
     private val logger = LoggerFactory.getLogger(KodeverkRestTemplateConfig::class.java)
+    private val secureLog = LoggerFactory.getLogger("secureLog")
 
     @Value("\${KODEVERK_URL}")
     lateinit var kodeverkUrl: String
@@ -68,7 +69,7 @@ class KodeverkRestTemplateConfig(
         return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray?, execution: ClientHttpRequestExecution ->
             val decodedToken = URLDecoder.decode(getToken(tokenValidationContextHolder).encodedToken, StandardCharsets.UTF_8)
 
-            logger.debug("NAVIdent: ${getClaims(tokenValidationContextHolder).get("NAVident")?.toString()}")
+            secureLog.info("NAVIdent: ${getClaims(tokenValidationContextHolder).get("NAVident")?.toString()}")
 
             val tokenClient: AzureAdOnBehalfOfTokenClient = AzureAdTokenClientBuilder.builder()
                 .withNaisDefaults()
@@ -78,7 +79,7 @@ class KodeverkRestTemplateConfig(
                 "api://$clientId/.default",
                 decodedToken
             )
-            logger.debug("Access token: $accessToken")
+            secureLog.info("Access token: $accessToken")
 
             request.headers.setBearerAuth(accessToken)
             execution.execute(request, body!!)
