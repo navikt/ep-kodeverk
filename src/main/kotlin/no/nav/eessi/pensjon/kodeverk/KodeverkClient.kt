@@ -3,8 +3,10 @@ package no.nav.eessi.pensjon.kodeverk
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.eessi.pensjon.logging.RequestIdOnMDCFilter
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
@@ -80,7 +82,7 @@ class KodeVerkHentLandkoder(
     init {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
     }
-    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
+//    @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentLandKoder(): List<Landkode> {
         return kodeverkMetrics.measure {
 
@@ -104,15 +106,15 @@ class KodeVerkHentLandkoder(
         try {
             val headers = HttpHeaders()
             headers["Nav-Consumer-Id"] = appName
-            headers["Nav-Call-Id"] = UUID.randomUUID().toString()
+            headers["Nav-Call-Id"] =  MDC.get(RequestIdOnMDCFilter.REQUEST_ID_MDC_KEY) ?: UUID.randomUUID().toString()
             val requestEntity = HttpEntity<String>(headers)
-            logger.debug("Header: $requestEntity")
+            logger.info("Header: $requestEntity")
             val response = kodeverkRestTemplate.exchange(
                 builder.toUriString(),
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
-            ).also { logger.debug("KodeverkClient; response : $it") }
+            ).also { logger.info("KodeverkClient; response : $it") }
 
             return response.body ?: throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
 

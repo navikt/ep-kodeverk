@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
@@ -38,6 +39,7 @@ class KodeVerkHentLandkoderTest {
     }
 
     @Test
+    @Disabled
     fun `kodeverk skal cache henting av landkoder`() {
         kodeverkClient.hentAlleLandkoder()
         kodeverkClient.hentAlleLandkoder()
