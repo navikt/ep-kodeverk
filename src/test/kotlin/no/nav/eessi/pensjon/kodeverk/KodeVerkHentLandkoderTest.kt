@@ -39,7 +39,6 @@ class KodeVerkHentLandkoderTest {
     }
 
     @Test
-    @Disabled
     fun `kodeverk skal cache henting av landkoder`() {
         kodeverkClient.hentAlleLandkoder()
         kodeverkClient.hentAlleLandkoder()
