@@ -29,6 +29,8 @@ import java.util.*
 class KodeverkClient(
     @Autowired private val kodeVerkHentLandkoder: KodeVerkHentLandkoder)
 {
+    private val logger = LoggerFactory.getLogger(KodeverkClient::class.java)
+
     fun hentAlleLandkoder() = kodeVerkHentLandkoder.hentLandKoder().toJson()
 
     fun hentLandkoderAlpha2() = kodeVerkHentLandkoder.hentLandKoder().map { it.landkode2 }
@@ -42,7 +44,7 @@ class KodeverkClient(
             2 -> kodeVerkHentLandkoder.hentLandKoder().firstOrNull { it.landkode2 == landkode }?.landkode3
             3 -> kodeVerkHentLandkoder.hentLandKoder().firstOrNull { it.landkode3 == landkode }?.landkode2
             else -> throw LandkodeException("Ugyldig landkode: $landkode")
-        }
+        }.also { landkode -> logger.debug("landkode $landkode") }
     }
 
     companion object{
