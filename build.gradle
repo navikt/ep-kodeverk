@@ -36,7 +36,7 @@ dependencies {
 //    implementation("no.nav.security:token-validation-jaxrs:${tokenSupportVersion}")
     implementation ("no.nav.common:token-client:3.2024.11.26_16.35-432a29107830")
 
-    implementation("no.nav.eessi.pensjon:ep-metrics:2.0.89")
+    implementation("no.nav.eessi.pensjon:ep-metrics:2.0.94")
     implementation("no.nav.eessi.pensjon:ep-logging:2.1.94")
     testImplementation("org.springframework:spring-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
