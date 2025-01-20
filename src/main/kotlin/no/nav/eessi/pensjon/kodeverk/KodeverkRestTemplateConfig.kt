@@ -30,7 +30,6 @@ class KodeverkRestTemplateConfig(
     @Autowired private val env: Environment
 ) {
     private val logger = LoggerFactory.getLogger(KodeverkRestTemplateConfig::class.java)
-    private val secureLog = LoggerFactory.getLogger("secureLog")
 
     @Value("\${KODEVERK_URL}")
     lateinit var kodeverkUrl: String
