@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.eessi.pensjon.logging.RequestIdOnMDCFilter
 import no.nav.eessi.pensjon.metrics.MetricsHelper
+import no.nav.eessi.pensjon.utils.mapJsonToAny
+import no.nav.eessi.pensjon.utils.toJson
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,16 +50,8 @@ class KodeverkClient(
     }
 
     companion object{
-        fun mapAnyToJson(data: Any): String {
-            return mapperWithJavaTime()
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(data)
-        }
-
         fun mapperWithJavaTime(): ObjectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
-
-        fun Any.toJson() = mapAnyToJson(this)
     }
 }
 
@@ -69,6 +63,9 @@ data class Landkode(
 class KodeverkException(message: String) : ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message)
 class LandkodeException(message: String) : ResponseStatusException(HttpStatus.BAD_REQUEST, message)
 
+/**
+    Deler av koden nedenfor er hentet fra: https://github.com/navikt/samordning-personoppslag/tree/main
+ */
 
 @Component
 @Profile("!excludeKodeverk")
@@ -77,20 +74,19 @@ class KodeVerkHentLandkoder(
     private val kodeverkRestTemplate: RestTemplate,
     @Autowired(required = false) private val metricsHelper: MetricsHelper = MetricsHelper.ForTest()
 ) {
-    lateinit var kodeverkMetrics: MetricsHelper.Metric
+    private lateinit var kodeverkMetrics: MetricsHelper.Metric
+    private lateinit var kodeverkPostMetrics: MetricsHelper.Metric
 
-    private val logger = LoggerFactory.getLogger(KodeVerkHentLandkoder::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     init {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
+        kodeverkPostMetrics = metricsHelper.init("KodeverkHentPostnr")
     }
     @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentLandKoder(): List<Landkode> {
         return kodeverkMetrics.measure {
-
-            val tmpLandkoder = hentHierarki("LandkoderSammensattISO2")
-
-            val rootNode = jacksonObjectMapper().readTree(tmpLandkoder)
+            val rootNode = jacksonObjectMapper().readTree(hentHierarki("LandkoderSammensattISO2"))
             val noder = rootNode.at("/noder").toList()
 
             noder.map { node ->
@@ -104,21 +100,40 @@ class KodeVerkHentLandkoder(
         }
     }
 
+    @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#root.methodName")
+    fun hentPostnr(): List<Postnummer> {
+        return kodeverkPostMetrics.measure {
+            val kodeverk = hentKodeverk("Postnummer")
+            mapJsonToAny<KodeverkResponse>(kodeverk)
+                .betydninger.map{ kodeverk ->
+                Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
+            }.sortedBy { (sorting, _) -> sorting }
+                .toList()
+                .also { logger.info("Har importert postnummer og sted. size: ${it.size}") }
+        }
+    }
+
+    private fun hentKodeverk(kodeverk: String): String {
+        val path = "/api/v1/kodeverk/{kodeverk}/koder/betydninger?spraak=nb"
+        val uriParams = mapOf("kodeverk" to kodeverk)
+
+        return doRequest(UriComponentsBuilder.fromUriString(path).buildAndExpand(uriParams))
+    }
+
     private fun doRequest(builder: UriComponents): String {
-        try {
+        return try {
             val headers = HttpHeaders()
             headers["Nav-Consumer-Id"] = appName
             headers["Nav-Call-Id"] =  MDC.get(RequestIdOnMDCFilter.REQUEST_ID_MDC_KEY) ?: UUID.randomUUID().toString()
             val requestEntity = HttpEntity<String>(headers)
             logger.info("Header: $requestEntity")
-            val response = kodeverkRestTemplate.exchange(
+            kodeverkRestTemplate.exchange<String>(
                 builder.toUriString(),
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
-            ).also { logger.info("KodeverkClient; response : $it") }
-
-            return response.body ?: throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
+            ).body ?: throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
+                .also { logger.info("KodeverkClient; response : $it") }
 
         } catch (ce: HttpClientErrorException) {
             logger.error(ce.message, ce)

@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 internal const val KODEVERK_CACHE = "kodeverk"
+internal const val KODEVERK_POSTNR_CACHE = "kodeverk_postnr"
 
 @Configuration
 @EnableCaching
