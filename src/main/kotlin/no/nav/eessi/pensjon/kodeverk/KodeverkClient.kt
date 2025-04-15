@@ -108,13 +108,13 @@ class KodeVerkHentLandkoder(
             return null
         }
         return kodeverkPostMetrics.measure {
-            val kodeverk = hentKodeverk("Postnummer")
+            val kodeverk = hentKodeverk(postnummer)
             mapJsonToAny<KodeverkResponse>(kodeverk)
                 .betydninger.map{ kodeverk ->
                 Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
             }.sortedBy { (sorting, _) -> sorting }
-                .toList().also { logger.info("Har importert postnummer og sted. size: ${it.size}") }
-                .firstOrNull()
+                .toList().also { logger.info("Har importert postnummer og sted. size: ${it.size} ${it.toJson()}") }
+                .firstOrNull { it.postnummer == postnummer }
         }
     }
 
