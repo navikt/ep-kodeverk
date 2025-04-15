@@ -95,7 +95,7 @@ class KodeverkClientTest {
     @Test
     fun `kodeverk call postnr return poststed`() {
         every { mockrestTemplate.exchange(
-            eq("/api/v1/kodeverk/2320/koder/betydninger?spraak=nb"),
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
             any(),
             any<HttpEntity<Unit>>(),
             eq(String::class.java)

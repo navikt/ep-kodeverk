@@ -108,7 +108,7 @@ class KodeVerkHentLandkoder(
             return null
         }
         return kodeverkPostMetrics.measure {
-            val kodeverk = hentKodeverk(postnummer)
+            val kodeverk = hentKodeverk("Postnummer")
             mapJsonToAny<KodeverkResponse>(kodeverk)
                 .betydninger.map{ kodeverk ->
                 Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
