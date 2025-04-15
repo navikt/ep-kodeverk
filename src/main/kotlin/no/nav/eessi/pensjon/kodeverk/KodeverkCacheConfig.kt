@@ -17,4 +17,9 @@ class KodeverkCacheConfig {
     fun cacheManager(): CacheManager {
         return ConcurrentMapCacheManager(KODEVERK_CACHE)
     }
+
+    @Bean("kodeverkPostnummerCacheManager")
+    fun cacheManagerPostnummer(): CacheManager {
+        return ConcurrentMapCacheManager(KODEVERK_POSTNR_CACHE)
+    }
 }
