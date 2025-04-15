@@ -5,7 +5,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
@@ -63,6 +62,7 @@ class KodeVerkHentLandkoderTest {
         fun kodeVerkHentLandkoder(): KodeVerkHentLandkoder {
             return KodeVerkHentLandkoder("testApp", restTemplate, MetricsHelper.ForTest())
         }
+
         @Bean
         fun kodeverkClient(): KodeverkClient {
             return KodeverkClient(kodeVerkHentLandkoder())

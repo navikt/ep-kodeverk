@@ -101,7 +101,7 @@ class KodeVerkHentLandkoder(
         }
     }
 
-    @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#root.methodName", cacheManager = "kodeverkPostnummerCacheManager")
+    @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentPostSted(postnummer: String?): Postnummer? {
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")
