@@ -2,8 +2,12 @@ package no.nav.eessi.pensjon.kodeverk
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.eessi.pensjon.utils.toJson
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,6 +29,11 @@ class KodeverkClientTest {
 
     private lateinit var kodeverkService: KodeverkClient
     private lateinit var kodeverkClient: KodeVerkHentLandkoder
+
+    private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+    private val kodeverkPostnrResponse = mapper.readValue<KodeverkResponse>(javaClass.getResource("/postnummer.json")?.readText()
+        ?: throw Exception("ikke funnet"))
+
 
     @BeforeEach
     fun setup() {
@@ -81,6 +90,20 @@ class KodeverkClientTest {
 
         Assertions.assertEquals("AD", list.first().landkode2)
         Assertions.assertEquals("AND", list.first().landkode3)
+    }
+
+    @Test
+    fun `kodeverk call postnr return poststed`() {
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) }  returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
+
+        val result = kodeverkClient.hentPostSted("2320")
+        println("Resultat: $result")
+
     }
 
     @Test

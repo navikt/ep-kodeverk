@@ -34,6 +34,7 @@ class KodeverkClient(
     private val logger = LoggerFactory.getLogger(KodeverkClient::class.java)
 
     fun hentAlleLandkoder() = kodeVerkHentLandkoder.hentLandKoder().toJson()
+    fun hentPostSted(postnummer: String?) = kodeVerkHentLandkoder.hentPostSted(postnummer)
 
     fun hentLandkoderAlpha2() = kodeVerkHentLandkoder.hentLandKoder().map { it.landkode2 }
 
@@ -101,15 +102,19 @@ class KodeVerkHentLandkoder(
     }
 
     @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#root.methodName")
-    fun hentPostnr(): List<Postnummer> {
+    fun hentPostSted(postnummer: String?): Postnummer? {
+        if (postnummer.isNullOrEmpty()) {
+            logger.warn("Postnummer er null eller tomt")
+            return null
+        }
         return kodeverkPostMetrics.measure {
             val kodeverk = hentKodeverk("Postnummer")
             mapJsonToAny<KodeverkResponse>(kodeverk)
                 .betydninger.map{ kodeverk ->
                 Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
             }.sortedBy { (sorting, _) -> sorting }
-                .toList()
-                .also { logger.info("Har importert postnummer og sted. size: ${it.size}") }
+                .toList().also { logger.info("Har importert postnummer og sted. size: ${it.size}") }
+                .firstOrNull()
         }
     }
 
