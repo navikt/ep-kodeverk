@@ -103,12 +103,13 @@ class KodeVerkHentLandkoder(
 
     @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentPostSted(postnummer: String?): Postnummer? {
+        logger.debug("KodeverkClient hentPostSted: $postnummer")
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")
             return null
         }
         return kodeverkPostMetrics.measure {
-            val kodeverk = hentKodeverk("Postnummer")
+            val kodeverk = hentKodeverk(postnummer).also { logger.debug("kodeverk bla bla: $it") }
             mapJsonToAny<KodeverkResponse>(kodeverk)
                 .betydninger.map{ kodeverk ->
                 Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
