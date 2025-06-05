@@ -103,7 +103,6 @@ class KodeVerkHentLandkoder(
 
     //@Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager")
     fun hentPostSted(postnummer: String?): Postnummer? {
-        logger.debug("KodeverkClient hentPostSted: $postnummer")
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")
             return null
@@ -116,7 +115,7 @@ class KodeVerkHentLandkoder(
             }.sortedBy { (sorting, _) -> sorting }
                 .toList().also { logger.info("Har importert postnummer og sted. size: ${it.size} ${it.toJson()}") }
                 .firstOrNull { it.postnummer == postnummer }
-        }
+        }.also {logger.info("KodeverkClient hentPostSted: $postnummer, med poststed: ${it?.sted}") }
     }
 
     private fun hentKodeverk(kodeverk: String): String {
