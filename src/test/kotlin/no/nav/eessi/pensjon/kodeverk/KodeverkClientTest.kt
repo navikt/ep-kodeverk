@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.eessi.pensjon.utils.toJson
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -29,6 +30,7 @@ class KodeverkClientTest {
 
     private lateinit var kodeverkService: KodeverkClient
     private lateinit var kodeverkClient: KodeVerkHentLandkoder
+    private lateinit var postnummerService: PostnummerService
 
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
     private val kodeverkPostnrResponse = mapper.readValue<KodeverkResponse>(javaClass.getResource("/postnummer.json")?.readText()
@@ -38,7 +40,8 @@ class KodeverkClientTest {
     @BeforeEach
     fun setup() {
         kodeverkClient = KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate)
-        kodeverkService = KodeverkClient(kodeVerkHentLandkoder = kodeverkClient)
+        postnummerService = PostnummerService()
+        kodeverkService = KodeverkClient(kodeVerkHentLandkoder = kodeverkClient, postnummerService = postnummerService)
 
         val mockResponseEntityISO3 =
             createResponseEntityFromJsonFile("src/test/resources/no/nav/eessi/pensjon/kodeverk/landkoderSammensattIso2.json")
@@ -93,6 +96,32 @@ class KodeverkClientTest {
     }
 
     @Test
+    fun `hentpostnummer skal være likt for gammel og ny metode`() {
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) }  returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
+
+        val poststed = kodeverkService.hentPostSted("3650")
+        assertEquals("TINN AUSTBYGD", poststed?.sted)
+    }
+
+    @Test
+    fun `hentpostnummer skal velge gammel metode ved feil`() {
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) }  returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
+
+        val poststed = kodeverkService.hentPostSted("5786")
+        assertEquals("EIDFJORD", poststed?.sted)
+    }
+
+    @Test
     fun `kodeverk call postnr return poststed`() {
         every { mockrestTemplate.exchange(
             eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
@@ -102,9 +131,8 @@ class KodeverkClientTest {
         ) }  returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
 
         val result = kodeverkClient.hentPostSted("2320")
-        Assertions.assertEquals("2320", result?.postnummer)
-        Assertions.assertEquals("FURNES", result?.sted)
-
+        assertEquals("2320", result?.postnummer)
+        assertEquals("FURNES", result?.sted)
     }
 
     @Test

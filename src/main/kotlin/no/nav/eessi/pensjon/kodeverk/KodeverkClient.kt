@@ -29,12 +29,28 @@ import java.util.*
 @Component
 @Profile("!excludeKodeverk")
 class KodeverkClient(
-    @Autowired private val kodeVerkHentLandkoder: KodeVerkHentLandkoder)
+    @Autowired private val kodeVerkHentLandkoder: KodeVerkHentLandkoder, private val postnummerService: PostnummerService)
 {
     private val logger = LoggerFactory.getLogger(KodeverkClient::class.java)
 
     fun hentAlleLandkoder() = kodeVerkHentLandkoder.hentLandKoder().toJson()
-    fun hentPostSted(postnummer: String?) = kodeVerkHentLandkoder.hentPostSted(postnummer)
+    fun hentPostSted(postnummer: String?): Postnummer? {
+        if (postnummer.isNullOrEmpty()) {
+            logger.warn("Postnummer er null eller tomt")
+            return null
+        }
+
+        val postnummerLokalt = postnummerService.finnPoststed(postnummer)
+        val postnummerKodeverkAPI = kodeVerkHentLandkoder.hentPostSted(postnummer)
+
+        return if (postnummerLokalt != postnummerKodeverkAPI?.sted) {
+            logger.info("Forskjell mellom lokalt og kodeverk for postnummer $postnummer: V1=$postnummerLokalt, V2=${postnummerKodeverkAPI?.sted}")
+            postnummerLokalt?.let { Postnummer(postnummer, it) }
+        } else {
+            logger.info("Fant poststed for postnummer $postnummerKodeverkAPI")
+            postnummerKodeverkAPI
+        }
+    }
 
     fun hentLandkoderAlpha2() = kodeVerkHentLandkoder.hentLandKoder().map { it.landkode2 }
 

@@ -64,8 +64,13 @@ class KodeVerkHentLandkoderTest {
         }
 
         @Bean
+        fun postnummerService(): PostnummerService {
+            return PostnummerService(MetricsHelper.ForTest())
+        }
+
+        @Bean
         fun kodeverkClient(): KodeverkClient {
-            return KodeverkClient(kodeVerkHentLandkoder())
+            return KodeverkClient(kodeVerkHentLandkoder(), postnummerService())
         }
     }
 }
