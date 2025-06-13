@@ -34,6 +34,7 @@ class KodeverkClient(
     private val logger = LoggerFactory.getLogger(KodeverkClient::class.java)
 
     fun hentAlleLandkoder() = kodeVerkHentLandkoder.hentLandKoder().toJson()
+
     fun hentPostSted(postnummer: String?): Postnummer? {
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")
@@ -44,14 +45,13 @@ class KodeverkClient(
         val postnummerKodeverkAPI = kodeVerkHentLandkoder.hentPostSted(postnummer)
 
         return if (postnummerLokalt != postnummerKodeverkAPI?.sted) {
-            logger.info("Forskjell mellom lokalt og kodeverk for postnummer $postnummer: V1=$postnummerLokalt, V2=${postnummerKodeverkAPI?.sted}")
-            postnummerLokalt?.let { Postnummer(postnummer, it) }
+            logger.error("Forskjell mellom lokalt og kodeverk for postnummer $postnummer: V1=$postnummerLokalt, V2=${postnummerKodeverkAPI?.sted}")
+            postnummerLokalt?.let { Postnummer(postnummer, it) } // stoler med på lokalt poststed
         } else {
             logger.info("Fant poststed for postnummer $postnummerKodeverkAPI")
             postnummerKodeverkAPI
         }
     }
-
     fun hentLandkoderAlpha2() = kodeVerkHentLandkoder.hentLandKoder().map { it.landkode2 }
 
     fun finnLandkode(landkode: String): String? {
@@ -83,7 +83,6 @@ class LandkodeException(message: String) : ResponseStatusException(HttpStatus.BA
 /**
     Deler av koden nedenfor er hentet fra: https://github.com/navikt/samordning-personoppslag/tree/main
  */
-
 @Component
 @Profile("!excludeKodeverk")
 class KodeVerkHentLandkoder(
@@ -117,6 +116,7 @@ class KodeVerkHentLandkoder(
         }
     }
 
+    @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#postnummer", cacheManager = "kodeverkCacheManager")
     fun hentPostSted(postnummer: String?): Postnummer? {
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")

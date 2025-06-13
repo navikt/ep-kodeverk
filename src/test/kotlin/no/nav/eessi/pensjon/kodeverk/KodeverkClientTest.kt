@@ -7,6 +7,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import no.nav.eessi.pensjon.metrics.MetricsHelper
 import no.nav.eessi.pensjon.utils.toJson
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,36 +17,69 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.cache.concurrent.ConcurrentMapCache
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager
+import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import org.springframework.web.client.RestTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Stream
 
+@SpringJUnitConfig(classes = [KodeverkCacheConfig::class, KodeverkClientTest.Config::class])
 class KodeverkClientTest {
 
-    private val mockrestTemplate: RestTemplate = mockk()
+    @Autowired
+    lateinit var cacheManager: ConcurrentMapCacheManager
 
-    private lateinit var kodeverkService: KodeverkClient
-    private lateinit var kodeverkClient: KodeVerkHentLandkoder
-    private lateinit var postnummerService: PostnummerService
+    @Autowired
+    private lateinit var kodeverkClient: KodeverkClient
 
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
     private val kodeverkPostnrResponse = mapper.readValue<KodeverkResponse>(javaClass.getResource("/postnummer.json")?.readText()
         ?: throw Exception("ikke funnet"))
 
+    companion object {
+        var mockrestTemplate: RestTemplate = mockk()
+        @JvmStatic
+        fun landkoder() = Stream.of(
+            Arguments.of("SE", "SWE"), // landkode 2
+            Arguments.of("BMU", "BM"), // landkode 3
+            Arguments.of("ALB", "AL"), // landkode 3
+        )
+    }
+
+    @TestConfiguration
+    class Config {
+        @Bean
+        fun kodeVerkHentLandkoder(): KodeVerkHentLandkoder {
+            return KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate)
+        }
+
+        @Bean
+        fun postnummerService() = PostnummerService()
+
+        @Bean
+        fun kodeverkClient(): KodeverkClient {
+            return KodeverkClient(kodeVerkHentLandkoder = kodeVerkHentLandkoder(), postnummerService = postnummerService())
+        }
+    }
+
 
     @BeforeEach
     fun setup() {
-        kodeverkClient = KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate)
-        postnummerService = PostnummerService()
-        kodeverkService = KodeverkClient(kodeVerkHentLandkoder = kodeverkClient, postnummerService = postnummerService)
-
         val mockResponseEntityISO3 =
             createResponseEntityFromJsonFile("src/test/resources/no/nav/eessi/pensjon/kodeverk/landkoderSammensattIso2.json")
+
+        val betydninger_spraak_nb =
+            createResponseEntityFromJsonFile("src/test/resources/betydninger_spraak_nb")
 
         every {
             mockrestTemplate
@@ -55,44 +90,59 @@ class KodeverkClientTest {
                     eq(String::class.java)
                 )
         } returns mockResponseEntityISO3
+
+        every {
+            mockrestTemplate
+                .exchange(
+                    eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+                    any(),
+                    any<HttpEntity<Unit>>(),
+                    eq(String::class.java)
+                )
+        } returns betydninger_spraak_nb
     }
 
     @ParameterizedTest(name = "Henter landkode: {0}. Forventet svar: {1}")
     @MethodSource("landkoder")
     fun `henting av landkode ved bruk av landkode `(expected: String, landkode: String) {
 
-        val actual = kodeverkService.finnLandkode(landkode)
-
-        Assertions.assertEquals(expected, actual)
+        val actual = kodeverkClient.finnLandkode(landkode)
+        assertEquals(expected, actual)
     }
 
-    private companion object {
-        @JvmStatic
-        fun landkoder() = Stream.of(
-            Arguments.of("SE", "SWE"), // landkode 2
-            Arguments.of("BMU", "BM"), // landkode 3
-            Arguments.of("ALB", "AL"), // landkode 3
-        )
+    @ParameterizedTest
+    @CsvSource("4971, SUNDEBRU, 1", "2306, HAMAR, 2", "3630, RØDBERG, 3", "3631, RØDBERG, 4", "3632, UVDAL, 5","3632, UVDAL, 5", "3632, UVDAL, 5")
+    fun `henter poststed fra forskjellige metoder for cahce-testing`(postnummer: String, sted: String, cacheSize: Int) {
+        if(cacheSize == 1) cacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+
+        assertEquals(sted, kodeverkClient.hentPostSted(postnummer)?.sted)
+        assertEquals(cacheSize,  cache().size)
     }
+
+    private fun cache(): List<MutableMap.MutableEntry<in Any, in Any>> {
+        val cache = cacheManager.getCache(KODEVERK_POSTNR_CACHE) as ConcurrentMapCache
+        return cache.nativeCache.entries.toList()
+    }
+
 
     @Test
     fun testerLankodeMed2Siffer() {
-        val actual = kodeverkService.hentLandkoderAlpha2()
+        val actual = kodeverkClient.hentLandkoderAlpha2()
 
-        Assertions.assertEquals("ZW", actual.last())
-        Assertions.assertEquals(249, actual.size)
+        assertEquals("ZW", actual.last())
+        assertEquals(249, actual.size)
     }
 
     @Test
     fun henteAlleLandkoderReturnererAlleLandkoder() {
-        val json = kodeverkService.hentAlleLandkoder()
+        val json = kodeverkClient.hentAlleLandkoder()
 
         val list = mapJsonToAny<List<Landkode>>(json)
 
         Assertions.assertEquals(249, list.size)
 
-        Assertions.assertEquals("AD", list.first().landkode2)
-        Assertions.assertEquals("AND", list.first().landkode3)
+        assertEquals("AD", list.first().landkode2)
+        assertEquals("AND", list.first().landkode3)
     }
 
     @Test
@@ -104,7 +154,7 @@ class KodeverkClientTest {
             eq(String::class.java)
         ) }  returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
 
-        val poststed = kodeverkService.hentPostSted("3650")
+        val poststed = kodeverkClient.hentPostSted("3650")
         assertEquals("TINN AUSTBYGD", poststed?.sted)
     }
 
@@ -117,7 +167,7 @@ class KodeverkClientTest {
             eq(String::class.java)
         ) }  returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
 
-        val poststed = kodeverkService.hentPostSted("5786")
+        val poststed = kodeverkClient.hentPostSted("5786")
         assertEquals("EIDFJORD", poststed?.sted)
     }
 
@@ -140,10 +190,10 @@ class KodeverkClientTest {
         val landkode2 = "BMUL"
 
         val exception = assertThrows<LandkodeException> {
-            kodeverkService.finnLandkode(landkode2)
+            kodeverkClient.finnLandkode(landkode2)
 
         }
-        Assertions.assertEquals("400 BAD_REQUEST \"Ugyldig landkode: BMUL\"", exception.message)
+        assertEquals("400 BAD_REQUEST \"Ugyldig landkode: BMUL\"", exception.message)
     }
 
     inline fun <reified T : Any> mapJsonToAny(json: String): T {
