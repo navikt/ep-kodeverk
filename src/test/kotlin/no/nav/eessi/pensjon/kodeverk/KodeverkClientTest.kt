@@ -180,7 +180,6 @@ class KodeverkClientTest {
 
     @Test
     fun `kodeverk call postnr return poststed`() {
-//        clearMocks(mockrestTemplate)
 
         every { mockrestTemplate.exchange(
             eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),

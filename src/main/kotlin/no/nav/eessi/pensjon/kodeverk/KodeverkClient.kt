@@ -132,7 +132,7 @@ class KodeVerkHentLandkoder(
             return null
         }
         return kodeverkPostMetrics.measure {
-            val kodeverk = hentKodeverk("Postnummer").also { logger.debug("kodeverk bla bla: $it") }
+            val kodeverk = hentKodeverk("Postnummer")
             val list = mapJsonToAny<KodeverkResponse>(kodeverk)
                 .betydninger.map { kodeverk ->
                     Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
@@ -165,7 +165,7 @@ class KodeVerkHentLandkoder(
             val requestEntity = HttpEntity<String>(headers)
             logger.info("Header: $requestEntity")
             kodeverkRestTemplate.exchange<String>(
-                builder.toUriString().also { logger.debug("Henter kodeverk: $it") },
+                builder.toUriString(),
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
