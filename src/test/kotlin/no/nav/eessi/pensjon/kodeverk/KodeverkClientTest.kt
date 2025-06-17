@@ -5,11 +5,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.eessi.pensjon.metrics.MetricsHelper
 import no.nav.eessi.pensjon.utils.toJson
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -25,6 +26,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCache
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
@@ -37,7 +39,7 @@ import java.util.stream.Stream
 class KodeverkClientTest {
 
     @Autowired
-    lateinit var cacheManager: ConcurrentMapCacheManager
+    lateinit var kodeverkCacheManager: ConcurrentMapCacheManager
 
     @Autowired
     private lateinit var kodeverkClient: KodeverkClient
@@ -72,6 +74,10 @@ class KodeverkClientTest {
         }
     }
 
+    @AfterEach
+    fun takeDown() {
+        clearMocks(mockrestTemplate)
+    }
 
     @BeforeEach
     fun setup() {
@@ -95,7 +101,7 @@ class KodeverkClientTest {
             mockrestTemplate
                 .exchange(
                     eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
-                    any(),
+                    HttpMethod.GET,
                     any<HttpEntity<Unit>>(),
                     eq(String::class.java)
                 )
@@ -112,18 +118,19 @@ class KodeverkClientTest {
 
     @ParameterizedTest
     @CsvSource("4971, SUNDEBRU, 1", "2306, HAMAR, 2", "3630, RØDBERG, 3", "3631, RØDBERG, 4", "3632, UVDAL, 5","3632, UVDAL, 5", "3632, UVDAL, 5")
-    fun `henter poststed fra forskjellige metoder for cahce-testing`(postnummer: String, sted: String, cacheSize: Int) {
-        if(cacheSize == 1) cacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+    fun `henter poststed fra forskjellige metoder for cahce-testing`(postnummer: String, sted: String, testRun: Int) {
+        if(testRun == 1) kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
 
         assertEquals(sted, kodeverkClient.hentPostSted(postnummer)?.sted)
-        assertEquals(cacheSize,  cache().size)
+        verify(exactly = if (testRun == 1) 1 else 0) {
+            mockrestTemplate.exchange(eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"), eq(HttpMethod.GET), any<HttpEntity<Unit>>(), any<Class<String>>())
+        }
     }
 
     private fun cache(): List<MutableMap.MutableEntry<in Any, in Any>> {
-        val cache = cacheManager.getCache(KODEVERK_POSTNR_CACHE) as ConcurrentMapCache
+        val cache = kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE) as ConcurrentMapCache
         return cache.nativeCache.entries.toList()
     }
-
 
     @Test
     fun testerLankodeMed2Siffer() {
@@ -173,6 +180,7 @@ class KodeverkClientTest {
 
     @Test
     fun `kodeverk call postnr return poststed`() {
+
         every { mockrestTemplate.exchange(
             eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
             any(),

@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.cache.CacheManager
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
@@ -58,6 +60,12 @@ class KodeVerkHentLandkoderTest {
 
     @TestConfiguration
     class Config {
+
+        @Bean("kodeverkCacheManager")
+        fun cacheManager(): CacheManager {
+            return ConcurrentMapCacheManager(KODEVERK_CACHE, KODEVERK_POSTNR_CACHE)
+        }
+
         @Bean
         fun kodeVerkHentLandkoder(): KodeVerkHentLandkoder {
             return KodeVerkHentLandkoder("testApp", restTemplate, MetricsHelper.ForTest())
