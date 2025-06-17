@@ -94,10 +94,9 @@ class LandkodeException(message: String) : ResponseStatusException(HttpStatus.BA
 class KodeVerkHentLandkoder(
     @Value("\${NAIS_APP_NAME}") val appName: String,
     private val kodeverkRestTemplate: RestTemplate,
+    private var kodeverkCacheManager: ConcurrentMapCacheManager,
     @Autowired(required = false) private val metricsHelper: MetricsHelper = MetricsHelper.ForTest()
 ) {
-    @Autowired
-    lateinit var kodeverkCacheManager: ConcurrentMapCacheManager
 
     private lateinit var kodeverkMetrics: MetricsHelper.Metric
     private lateinit var kodeverkPostMetrics: MetricsHelper.Metric

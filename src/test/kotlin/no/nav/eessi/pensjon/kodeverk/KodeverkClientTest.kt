@@ -9,13 +9,10 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.eessi.pensjon.metrics.MetricsHelper
 import no.nav.eessi.pensjon.utils.toJson
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
@@ -60,9 +57,15 @@ class KodeverkClientTest {
 
     @TestConfiguration
     class Config {
+
+        @Bean("kodeverkCacheManager")
+        fun cacheManager(): ConcurrentMapCacheManager {
+            return ConcurrentMapCacheManager(KODEVERK_CACHE, KODEVERK_POSTNR_CACHE)
+        }
+
         @Bean
         fun kodeVerkHentLandkoder(): KodeVerkHentLandkoder {
-            return KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate)
+            return KodeVerkHentLandkoder( "eessi-fagmodul", mockrestTemplate,  cacheManager(), MetricsHelper.ForTest())
         }
 
         @Bean
