@@ -11,20 +11,26 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
+import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.util.UriComponents
 import org.springframework.web.util.UriComponentsBuilder
+import java.io.File
 import java.util.*
+import kotlin.text.get
 
 @Component
 @Profile("!excludeKodeverk")
@@ -90,6 +96,9 @@ class KodeVerkHentLandkoder(
     private val kodeverkRestTemplate: RestTemplate,
     @Autowired(required = false) private val metricsHelper: MetricsHelper = MetricsHelper.ForTest()
 ) {
+    @Autowired
+    lateinit var kodeverkCacheManager: ConcurrentMapCacheManager
+
     private lateinit var kodeverkMetrics: MetricsHelper.Metric
     private lateinit var kodeverkPostMetrics: MetricsHelper.Metric
 
@@ -124,13 +133,21 @@ class KodeVerkHentLandkoder(
         }
         return kodeverkPostMetrics.measure {
             val kodeverk = hentKodeverk("Postnummer").also { logger.debug("kodeverk bla bla: $it") }
-            mapJsonToAny<KodeverkResponse>(kodeverk)
-                .betydninger.map{ kodeverk ->
-                Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
-            }.sortedBy { (sorting, _) -> sorting }
+            val list = mapJsonToAny<KodeverkResponse>(kodeverk)
+                .betydninger.map { kodeverk ->
+                    Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
+                }.sortedBy { (sorting, _) -> sorting }
                 .toList().also { logger.info("Har importert postnummer og sted. size: ${it.size} ${it.toJson()}") }
-                .firstOrNull { it.postnummer == postnummer }
-        }.also {logger.info("KodeverkClient hentPostSted: $postnummer, med poststed: ${it?.sted}") }
+
+            // legger postnummer i   cache
+            list.forEach { postnummerEntry ->
+                kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.put(postnummerEntry.postnummer, postnummerEntry)
+            }
+
+            // finner poststed fra postnummer
+            return@measure list.firstOrNull { it.postnummer == postnummer }
+
+        }
     }
 
     private fun hentKodeverk(kodeverk: String): String {
@@ -148,7 +165,7 @@ class KodeVerkHentLandkoder(
             val requestEntity = HttpEntity<String>(headers)
             logger.info("Header: $requestEntity")
             kodeverkRestTemplate.exchange<String>(
-                builder.toUriString(),
+                builder.toUriString().also { logger.debug("Henter kodeverk: $it") },
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
