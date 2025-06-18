@@ -137,7 +137,9 @@ class KodeVerkHentLandkoder(
                 .betydninger.map { kodeverk ->
                     Postnummer(kodeverk.key, kodeverk.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
                 }.sortedBy { (sorting, _) -> sorting }
-                .toList().also { logger.info("Har importert postnummer og sted. size: ${it.size} ${it.toJson()}") }
+                .toList()
+
+            logger.info("Har importert postnummer og sted. size: ${list.size}")
 
             // legger postnummer i manuelt cache
             list.forEach { postnummerEntry ->
