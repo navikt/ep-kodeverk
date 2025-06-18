@@ -14,7 +14,7 @@ internal const val KODEVERK_POSTNR_CACHE = "kodeverk_postnr"
 class KodeverkCacheConfig {
 
     @Bean("kodeverkCacheManager")
-    fun cacheManager(): ConcurrentMapCacheManager {
+    fun kodeverkCacheManager(): ConcurrentMapCacheManager {
         return ConcurrentMapCacheManager(KODEVERK_CACHE, KODEVERK_POSTNR_CACHE)
     }
 }

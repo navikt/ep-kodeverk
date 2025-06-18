@@ -126,6 +126,7 @@ class KodeVerkHentLandkoder(
 
     @Cacheable(cacheNames = [KODEVERK_POSTNR_CACHE], key = "#postnummer", cacheManager = "kodeverkCacheManager")
     fun hentPostSted(postnummer: String?): Postnummer? {
+        logger.info("Henter postSted for postnummer: $postnummer")
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")
             return null
@@ -144,7 +145,7 @@ class KodeVerkHentLandkoder(
             }
 
             // finner poststed fra postnummer
-            return@measure list.firstOrNull { it.postnummer == postnummer }
+            return@measure list.firstOrNull { it.postnummer == postnummer }.also { logger.info("Resulat $postnummer") }
 
         }
     }
