@@ -147,7 +147,7 @@ class KodeVerkHentLandkoder(
             }
 
             // finner poststed fra postnummer
-            return@measure list.firstOrNull { it.postnummer == postnummer }.also { logger.info("Resulat $postnummer") }
+            return@measure list.firstOrNull { it.postnummer == postnummer }
 
         }
     }
