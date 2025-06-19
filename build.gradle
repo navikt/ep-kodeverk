@@ -31,11 +31,14 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonModuleKotlinVersion}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonModuleKotlinVersion}")
 
-    implementation("no.nav.security:token-client-spring:${tokenSupportVersion}")
-    implementation ("no.nav.common:token-client:3.2025.04.01_09.46-936a3ae3d5d9")
+    // Micrometer
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.1")
 
-    implementation("no.nav.eessi.pensjon:ep-metrics:2.0.114")
-    implementation("no.nav.eessi.pensjon:ep-logging:2.2.19")
+    implementation("no.nav.security:token-client-spring:${tokenSupportVersion}")
+
+    implementation ("no.nav.common:token-client:3.2025.04.01_09.46-936a3ae3d5d9")
+    implementation("no.nav.eessi.pensjon:ep-metrics:2.0.126")
+    implementation("no.nav.eessi.pensjon:ep-logging:2.2.28")
     implementation("no.nav.eessi.pensjon:ep-eux:2.4.83")
 
     testImplementation("org.springframework:spring-test")
