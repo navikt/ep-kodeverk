@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.micrometer.core.instrument.Metrics
+import io.micrometer.core.instrument.Metrics.counter
 import no.nav.eessi.pensjon.logging.RequestIdOnMDCFilter
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import no.nav.eessi.pensjon.utils.mapJsonToAny
@@ -27,8 +28,6 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.util.UriComponents
 import org.springframework.web.util.UriComponentsBuilder
 import java.util.*
-import java.util.concurrent.CountDownLatch
-import kotlin.text.get
 
 @Component
 @Profile("!excludeKodeverk")
@@ -129,7 +128,12 @@ class KodeVerkHentLandkoder(
             return null
         }
 
-        val cachedPostnummer = hentFraCache(postnummer)
+        val cachedPostnummer1 = kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(postnummer, Postnummer::class.java)
+        if (cachedPostnummer1 != null) {
+            logger.info("Postnummer hentet fra cache: $postnummer")
+            counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
+        }
+        val cachedPostnummer = cachedPostnummer1
         if (cachedPostnummer != null) {
             return cachedPostnummer
         }
@@ -149,15 +153,6 @@ class KodeVerkHentLandkoder(
             Metrics.counter("ep_kodeverk_postnummer", "melding", "hentet_fra_kodeverk").increment()
             postnummerList.firstOrNull { it.postnummer == postnummer }
         }
-    }
-
-    private fun hentFraCache(postnummer: String): Postnummer? {
-        val cachedPostnummer = kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(postnummer, Postnummer::class.java)
-        if (cachedPostnummer != null) {
-            logger.info("Postnummer hentet fra cache: $postnummer")
-            Metrics.counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
-        }
-        return cachedPostnummer
     }
 
     private fun hentKodeverk(kodeverk: String): String {
