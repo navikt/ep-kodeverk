@@ -3,7 +3,7 @@ buildscript {
         kotlinVersion = '2.2.0'
         springBootVersion = '3.5.3'
         tokenSupportVersion = '5.0.30'
-        jacksonModuleKotlinVersion = '2.19.1'
+        jacksonModuleKotlinVersion = '2.19.2'
     }
 }
 plugins {
