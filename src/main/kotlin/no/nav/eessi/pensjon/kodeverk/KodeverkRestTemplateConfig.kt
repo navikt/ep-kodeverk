@@ -62,7 +62,8 @@ class KodeverkRestTemplateConfig(
         return ClientHttpRequestInterceptor { request: HttpRequest, body: ByteArray?, execution: ClientHttpRequestExecution ->
             logger.info("oAuth2BearerTokenInterceptor kodeverk")
             val response = oAuth2AccessTokenService.getAccessToken(clientProperties)
-            response.access_token?.let { request.headers.setBearerAuth(it) }.also { logger.debug("oAuth2BearerTokenInterceptor kodeverk: $it")}
+            response.access_token?.let { request.headers.setBearerAuth(it) }
+            logger.debug("oAuth2BearerTokenInterceptor kodeverk: $request")
             execution.execute(request, body!!)
         }
     }
