@@ -16,7 +16,7 @@ class PostnummerService(
     private val logger: Logger by lazy { LoggerFactory.getLogger(PostnummerService::class.java) }
     private val postalCodeTable: MutableMap<String?, PostData> = HashMap()
 
-    private lateinit var postNummerMetric: MetricsHelper.Metric
+    private var postNummerMetric: MetricsHelper.Metric
 
     init {
         postNummerMetric = metricsHelper.init("PostnummerServiceMetric")

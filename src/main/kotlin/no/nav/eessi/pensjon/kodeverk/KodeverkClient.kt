@@ -95,8 +95,8 @@ class KodeVerkHentLandkoder(
     @Autowired(required = false) private val metricsHelper: MetricsHelper = MetricsHelper.ForTest()
 ) {
 
-    private lateinit var kodeverkMetrics: MetricsHelper.Metric
-    private lateinit var kodeverkPostMetrics: MetricsHelper.Metric
+    private var kodeverkMetrics: MetricsHelper.Metric
+    private var kodeverkPostMetrics: MetricsHelper.Metric
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
