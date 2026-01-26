@@ -47,9 +47,13 @@ class KodeverkClient(
         val postnummerLokalt = postnummerService.finnPoststed(postnummer)
         val postnummerKodeverkAPI = kodeVerkHentLandkoder.hentPostSted(postnummer)
 
-        return if (postnummerLokalt != postnummerKodeverkAPI?.sted) {
+        return if (postnummerLokalt == null) {
+            logger.info("Lokalt poststed ikke funnet, bruker kodeverk for postnummer $postnummer")
+            postnummerKodeverkAPI
+        }
+        else if (postnummerLokalt != postnummerKodeverkAPI?.sted) {
             logger.error("Forskjell mellom lokalt og kodeverk for postnummer $postnummer: fra fil=$postnummerLokalt, fra kodeverk=${postnummerKodeverkAPI?.sted}")
-            postnummerLokalt?.let { Postnummer(postnummer, it) } // stoler mer på lokalt poststed
+            Postnummer(postnummer, postnummerLokalt) // stoler mer på lokalt poststed
         } else {
             logger.info("Fant poststed for postnummer $postnummerKodeverkAPI")
             postnummerKodeverkAPI
