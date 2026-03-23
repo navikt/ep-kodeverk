@@ -40,7 +40,7 @@ dependencies {
     implementation ("no.nav.common:token-client:3.2026.03.04_12.35-b34c347c6239")
     implementation("no.nav.eessi.pensjon:ep-logging:3.0.27")
     implementation("no.nav.eessi.pensjon:ep-metrics:3.0.20")
-    implementation("no.nav.eessi.pensjon:ep-eux:3.0.43")
+    implementation("no.nav.eessi.pensjon:ep-eux:3.0.44")
 
     testImplementation("org.springframework:spring-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
