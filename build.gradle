@@ -37,7 +37,7 @@ dependencies {
 
     implementation("no.nav.security:token-client-spring:${tokenSupportVersion}")
 
-    implementation ("no.nav.common:token-client:4.2026.04.24_05.25-cab3c16705f7")
+    implementation ("no.nav.common:token-client:4.2026.05.19_05.29-4b5633c82ec0")
     implementation("no.nav.eessi.pensjon:ep-logging:3.0.31")
     implementation("no.nav.eessi.pensjon:ep-metrics:3.0.23")
     implementation("no.nav.eessi.pensjon:ep-eux:3.0.62")
