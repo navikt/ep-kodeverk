@@ -37,7 +37,7 @@ class KodeverkRestTemplateConfig(
     @Bean
     fun kodeverkRestTemplate(): RestTemplate {
         return RestTemplateBuilder()
-            .rootUri(kodeverkUrl)
+            .baseUri(kodeverkUrl)
             .errorHandler(DefaultResponseErrorHandler())
             .additionalInterceptors(
                 RequestIdHeaderInterceptor(),
