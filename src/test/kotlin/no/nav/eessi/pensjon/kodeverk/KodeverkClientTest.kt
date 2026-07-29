@@ -197,6 +197,38 @@ class KodeverkClientTest {
     }
 
     @Test
+    fun `hentPostSted faller tilbake til lokalt poststed når kodeverk-kallet feiler`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } throws org.springframework.web.client.HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
+
+        // 3650 finnes i det lokale postnummerregisteret (TINN AUSTBYGD)
+        val poststed = kodeverkClient.hentPostSted("3650")
+
+        assertEquals("TINN AUSTBYGD", poststed?.sted)
+    }
+
+    @Test
+    fun `hentPostSted kaster videre når kodeverk-kallet feiler og postnummer ikke finnes lokalt`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } throws org.springframework.web.client.HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
+
+        // Ukjent/ikke-eksisterende postnummer, finnes ikke lokalt
+        assertThrows<KodeverkException> {
+            kodeverkClient.hentPostSted("00000")
+        }
+    }
+
+    @Test
     fun hentingavIso2landkodevedbrukAvlandkode3FeilerMedNull() {
         val landkode2 = "BMUL"
 

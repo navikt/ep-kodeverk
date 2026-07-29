@@ -45,7 +45,16 @@ class KodeverkClient(
         }
 
         val postnummerLokalt = postnummerService.finnPoststed(postnummer)
-        val postnummerKodeverkAPI = kodeVerkHentLandkoder.hentPostSted(postnummer)
+        val postnummerKodeverkAPI = try {
+            kodeVerkHentLandkoder.hentPostSted(postnummer)
+        } catch (ex: KodeverkException) {
+            if (postnummerLokalt == null) {
+                logger.error("Feil ved henting av poststed fra kodeverk for postnummer $postnummer, og ingen lokal verdi finnes", ex)
+                throw ex
+            }
+            logger.error("Feil ved henting av poststed fra kodeverk for postnummer $postnummer, bruker lokalt poststed $postnummerLokalt", ex)
+            null
+        }
 
         return if (postnummerLokalt == null) {
             logger.info("Lokalt poststed ikke funnet, bruker kodeverk for postnummer $postnummer")
