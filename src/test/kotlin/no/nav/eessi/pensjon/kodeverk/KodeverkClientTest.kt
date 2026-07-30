@@ -30,6 +30,9 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import org.springframework.web.client.RestTemplate
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 @SpringJUnitConfig(classes = [KodeverkCacheConfig::class, KodeverkClientTest.Config::class])
@@ -225,6 +228,69 @@ class KodeverkClientTest {
         // Ukjent/ikke-eksisterende postnummer, finnes ikke lokalt
         assertThrows<KodeverkException> {
             kodeverkClient.hentPostSted("00000")
+        }
+    }
+
+    @Test
+    fun `hentPostSted returnerer null når postnummer ikke finnes verken lokalt eller i kodeverk`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
+
+        // "9999" finnes verken i postnummerregister.txt (lokalt) eller i postnummer.json-fixturen (kodeverk)
+        val poststed = kodeverkClient.hentPostSted("9999")
+
+        assertEquals(null, poststed)
+    }
+
+    @Test
+    fun `postnummerregisteret caches som én samlet oppføring, ikke én per postnummer`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
+
+        kodeverkClient.hentPostSted("4971")
+
+        val cacheEntries = cache()
+        assertEquals(1, cacheEntries.size)
+        assertEquals(POSTNUMMER_REGISTER_KEY, cacheEntries.first().key)
+    }
+
+    @Test
+    fun `hentPostSted henter postnummerregisteret kun én gang ved samtidige kall`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } returns ResponseEntity<String>(kodeverkPostnrResponse.toJson(), HttpStatus.OK)
+
+        val postnumre = listOf("4971", "2306", "2305", "2304", "2303")
+        val executor = Executors.newFixedThreadPool(postnumre.size)
+        val startSignal = CountDownLatch(1)
+
+        val futures = postnumre.map { postnummer ->
+            executor.submit<Postnummer?> {
+                startSignal.await()
+                kodeverkClient.hentPostSted(postnummer)
+            }
+        }
+        startSignal.countDown()
+        val results = futures.map { it.get(5, TimeUnit.SECONDS) }
+        executor.shutdown()
+
+        assertEquals(postnumre, results.map { it?.postnummer })
+        verify(exactly = 1) {
+            mockrestTemplate.exchange(eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"), eq(HttpMethod.GET), any<HttpEntity<Unit>>(), any<Class<String>>())
         }
     }
 
