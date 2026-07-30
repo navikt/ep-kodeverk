@@ -112,6 +112,7 @@ class KodeVerkHentLandkoder(
     private var kodeverkPostMetrics: MetricsHelper.Metric
 
     private val logger = LoggerFactory.getLogger(javaClass)
+    private val postnummerRegisterLock = Any()
 
     init {
         kodeverkMetrics = metricsHelper.init("KodeverkHentLandKode")
@@ -141,30 +142,41 @@ class KodeVerkHentLandkoder(
             return null
         }
 
-        val cachedPostnummer1 = kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(postnummer, Postnummer::class.java)
-        if (cachedPostnummer1 != null) {
-            logger.info("Postnummer hentet fra cache: $postnummer")
+        return hentPostnummerRegister()[postnummer]
+    }
+
+    /**
+     * Henter og cacher hele postnummerregisteret som én cache-oppføring, i stedet for én oppføring per postnummer.
+     * Bruker dobbel-sjekket låsing for å unngå at flere samtidige kall ved cache-miss utløser flere separate
+     * kall mot Kodeverk-APIet for det samme registeret.
+     */
+    private fun hentPostnummerRegister(): Map<String, Postnummer> {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(POSTNUMMER_REGISTER_KEY, PostnummerRegister::class.java)?.let {
+            logger.info("Postnummerregister hentet fra cache")
             counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
-        }
-        val cachedPostnummer = cachedPostnummer1
-        if (cachedPostnummer != null) {
-            return cachedPostnummer
+            return it.postnumre
         }
 
-        return kodeverkPostMetrics.measure {
-            val kodeverk = hentKodeverk("Postnummer")
-            val postnummerList = mapJsonToAny<KodeverkResponse>(kodeverk).betydninger.map {
-                Postnummer(it.key, it.value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
-            }.sortedBy { it.postnummer }
-
-            logger.info("Har importert postnummer og sted. size: ${postnummerList.size}")
-
-            postnummerList.forEach { entry ->
-                kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.put(entry.postnummer, entry)
+        synchronized(postnummerRegisterLock) {
+            kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(POSTNUMMER_REGISTER_KEY, PostnummerRegister::class.java)?.let {
+                logger.info("Postnummerregister hentet fra cache")
+                counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
+                return it.postnumre
             }
 
-            Metrics.counter("ep_kodeverk_postnummer", "melding", "hentet_fra_kodeverk").increment()
-            postnummerList.firstOrNull { it.postnummer == postnummer }
+            return kodeverkPostMetrics.measure {
+                val kodeverk = hentKodeverk("Postnummer")
+                val postnummerRegister = mapJsonToAny<KodeverkResponse>(kodeverk).betydninger.entries.associate { (key, value) ->
+                    key to Postnummer(key, value.firstOrNull()?.beskrivelser?.nb?.term ?: "UKJENT")
+                }
+
+                logger.info("Har importert postnummer og sted. size: ${postnummerRegister.size}")
+
+                kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.put(POSTNUMMER_REGISTER_KEY, PostnummerRegister(postnummerRegister))
+
+                Metrics.counter("ep_kodeverk_postnummer", "melding", "hentet_fra_kodeverk").increment()
+                postnummerRegister
+            }
         }
     }
 
