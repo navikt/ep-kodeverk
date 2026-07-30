@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration
 
 internal const val KODEVERK_CACHE = "kodeverk"
 internal const val KODEVERK_POSTNR_CACHE = "kodeverk_postnr"
+internal const val POSTNUMMER_REGISTER_KEY = "alle"
 
 @Configuration
 @EnableCaching
