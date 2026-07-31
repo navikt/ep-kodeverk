@@ -265,6 +265,41 @@ class KodeverkClientTest {
     }
 
     @Test
+    fun `hentPostSted kaster KodeverkException når kodeverk svarer med tom body`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } returns ResponseEntity<String>(null, HttpStatus.OK)
+
+        // Postnummer finnes ikke lokalt, så det tomme kodeverk-svaret kan ikke reddes av lokal fallback
+        val exception = assertThrows<KodeverkException> {
+            kodeverkClient.hentPostSted("9999")
+        }
+        assertEquals("500 INTERNAL_SERVER_ERROR \"Feil ved konvetering av jsondata fra kodeverk\"", exception.message)
+    }
+
+    @Test
+    fun `hentPostSted kaster KodeverkException med fallback-melding når underliggende feil mangler melding`() {
+        kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
+        every { mockrestTemplate.exchange(
+            eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),
+            any(),
+            any<HttpEntity<Unit>>(),
+            eq(String::class.java)
+        ) } throws IllegalStateException(null as String?)
+
+        // "9999" finnes ikke lokalt, så feilen kan ikke reddes av lokal fallback.
+        // Uten fallback-meldingen ville dette kastet NullPointerException i stedet for KodeverkException (se message!!).
+        val exception = assertThrows<KodeverkException> {
+            kodeverkClient.hentPostSted("9999")
+        }
+        assertEquals("500 INTERNAL_SERVER_ERROR \"Ukjent feil ved kall mot kodeverk\"", exception.message)
+    }
+
+    @Test
     fun `hentPostSted henter postnummerregisteret kun én gang ved samtidige kall`() {
         kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.clear()
         every { mockrestTemplate.exchange(

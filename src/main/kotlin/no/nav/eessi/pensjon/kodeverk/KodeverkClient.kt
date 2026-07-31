@@ -194,23 +194,32 @@ class KodeVerkHentLandkoder(
             headers["Nav-Call-Id"] =  MDC.get(RequestIdOnMDCFilter.REQUEST_ID_MDC_KEY) ?: UUID.randomUUID().toString()
             val requestEntity = HttpEntity<String>(headers)
             logger.info("Header: $requestEntity")
-            kodeverkRestTemplate.exchange<String>(
+            val response = kodeverkRestTemplate.exchange<String>(
                 builder.toUriString(),
                 HttpMethod.GET,
                 requestEntity,
                 String::class.java
-            ).body ?: throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
-                .also { logger.info("KodeverkClient; response : $it") }
+            )
+
+            val body = response.body
+            if (body == null) {
+                logger.error("Tomt svar (body er null) fra kodeverk for URI ${builder.toUriString()}")
+                throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
+            }
+            logger.info("KodeverkClient; response : $body")
+            body
 
         } catch (ce: HttpClientErrorException) {
             logger.error(ce.message, ce)
-            throw KodeverkException(ce.message!!)
+            throw KodeverkException(ce.message ?: "Feil ved kall mot kodeverk (klientfeil)")
         } catch (se: HttpServerErrorException) {
             logger.error(se.message, se)
-            throw KodeverkException(se.message!!)
+            throw KodeverkException(se.message ?: "Feil ved kall mot kodeverk (serverfeil)")
+        } catch (ke: KodeverkException) {
+            throw ke
         } catch (ex: Exception) {
             logger.error(ex.message, ex)
-            throw KodeverkException(ex.message!!)
+            throw KodeverkException(ex.message ?: "Ukjent feil ved kall mot kodeverk")
         }
     }
 
