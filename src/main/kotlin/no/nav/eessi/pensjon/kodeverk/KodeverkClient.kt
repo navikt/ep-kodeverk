@@ -72,7 +72,7 @@ class KodeverkClient(
 
     fun finnLandkode(landkode: String): String? {
 
-        if (landkode.isNullOrEmpty() || landkode.length !in 2..3) {
+        if (landkode.isEmpty() || landkode.length !in 2..3) {
             throw LandkodeException("Ugyldig landkode: $landkode")
         }
         return when (landkode.length) {
