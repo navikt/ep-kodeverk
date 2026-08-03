@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.micrometer.core.instrument.Metrics
-import io.micrometer.core.instrument.Metrics.counter
 import no.nav.eessi.pensjon.logging.RequestIdOnMDCFilter
 import no.nav.eessi.pensjon.metrics.MetricsHelper
 import no.nav.eessi.pensjon.utils.mapJsonToAny
@@ -153,14 +152,14 @@ class KodeVerkHentLandkoder(
     private fun hentPostnummerRegister(): Map<String, Postnummer> {
         kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(POSTNUMMER_REGISTER_KEY, PostnummerRegister::class.java)?.let {
             logger.info("Postnummerregister hentet fra cache")
-            counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
+            Metrics.counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
             return it.postnumre
         }
 
         synchronized(postnummerRegisterLock) {
             kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE)?.get(POSTNUMMER_REGISTER_KEY, PostnummerRegister::class.java)?.let {
                 logger.info("Postnummerregister hentet fra cache")
-                counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
+                Metrics.counter("ep_kodeverk_postnummer", "melding", "hentet_fra_cache").increment()
                 return it.postnumre
             }
 
