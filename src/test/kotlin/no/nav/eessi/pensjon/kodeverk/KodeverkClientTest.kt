@@ -139,26 +139,6 @@ class KodeverkClientTest {
     }
 
     @Test
-    fun testerLankodeMed2Siffer() {
-        val actual = kodeverkClient.hentLandkoderAlpha2()
-
-        assertEquals("ZW", actual.last())
-        assertEquals(249, actual.size)
-    }
-
-    @Test
-    fun henteAlleLandkoderReturnererAlleLandkoder() {
-        val json = kodeverkClient.hentAlleLandkoder()
-
-        val list = mapJsonToAny<List<Landkode>>(json)
-
-        Assertions.assertEquals(249, list.size)
-
-        assertEquals("AD", list.first().landkode2)
-        assertEquals("AND", list.first().landkode3)
-    }
-
-    @Test
     fun `hentpostnummer skal være likt for gammel og ny metode`() {
         every { mockrestTemplate.exchange(
             eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"),

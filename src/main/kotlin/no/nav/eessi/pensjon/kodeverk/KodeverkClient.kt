@@ -35,8 +35,6 @@ class KodeverkClient(
 {
     private val logger = LoggerFactory.getLogger(KodeverkClient::class.java)
 
-    fun hentAlleLandkoder() = kodeVerkHentLandkoder.hentLandKoder().toJson()
-
     fun hentPostSted(postnummer: String?): Postnummer? {
         if (postnummer.isNullOrEmpty()) {
             logger.warn("Postnummer er null eller tomt")
@@ -67,8 +65,6 @@ class KodeverkClient(
             postnummerKodeverkAPI
         }
     }
-    fun hentLandkoderAlpha2() = kodeVerkHentLandkoder.hentLandKoder().map { it.landkode2 }
-
     fun finnLandkode(landkode: String): String? {
 
         if (landkode.isEmpty() || landkode.length !in 2..3) {
