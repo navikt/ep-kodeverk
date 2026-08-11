@@ -133,8 +133,8 @@ class KodeverkClientTest {
         }
     }
 
-    private fun cache(): List<MutableMap.MutableEntry<in Any, in Any>> {
-        val cache = kodeverkCacheManager.getCache(KODEVERK_POSTNR_CACHE) as ConcurrentMapCache
+    private fun cache(cacheName: String = KODEVERK_POSTNR_CACHE): List<MutableMap.MutableEntry<in Any, in Any>> {
+        val cache = kodeverkCacheManager.getCache(cacheName) as ConcurrentMapCache
         return cache.nativeCache.entries.toList()
     }
 
@@ -306,6 +306,40 @@ class KodeverkClientTest {
         assertEquals(postnumre, results.map { it?.postnummer })
         verify(exactly = 1) {
             mockrestTemplate.exchange(eq("/api/v1/kodeverk/Postnummer/koder/betydninger?spraak=nb"), eq(HttpMethod.GET), any<HttpEntity<Unit>>(), any<Class<String>>())
+        }
+    }
+
+    @Test
+    fun `landkoder caches som én samlet oppføring`() {
+        kodeverkCacheManager.getCache(KODEVERK_CACHE)?.clear()
+
+        kodeverkClient.finnLandkode("SE")
+
+        val cacheEntries = cache(KODEVERK_CACHE)
+        assertEquals(1, cacheEntries.size)
+        assertEquals("hentLandKoder", cacheEntries.first().key)
+    }
+
+    @Test
+    fun `hentLandKoder henter landkoder kun én gang ved samtidige kall`() {
+        kodeverkCacheManager.getCache(KODEVERK_CACHE)?.clear()
+
+        val landkoder = listOf("SE", "BMU", "ALB", "SE", "BMU")
+        val executor = Executors.newFixedThreadPool(landkoder.size)
+        val startSignal = CountDownLatch(1)
+
+        val futures = landkoder.map { landkode ->
+            executor.submit<String?> {
+                startSignal.await()
+                kodeverkClient.finnLandkode(landkode)
+            }
+        }
+        startSignal.countDown()
+        futures.forEach { it.get(5, TimeUnit.SECONDS) }
+        executor.shutdown()
+
+        verify(exactly = 1) {
+            mockrestTemplate.exchange(eq("/api/v1/hierarki/LandkoderSammensattISO2/noder"), eq(HttpMethod.GET), any<HttpEntity<Unit>>(), any<Class<String>>())
         }
     }
 
