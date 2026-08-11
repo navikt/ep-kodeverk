@@ -115,6 +115,7 @@ class KodeVerkHentLandkoder(
     }
     @Cacheable(cacheNames = [KODEVERK_CACHE], key = "#root.methodName", cacheManager = "kodeverkCacheManager", sync = true)
     fun hentLandKoder(): List<Landkode> {
+        Metrics.counter("ep_kodeverk_landkode", "melding", "hentet_fra_kodeverk").increment()
         return kodeverkMetrics.measure {
             val rootNode = jacksonObjectMapper().readTree(hentHierarki("LandkoderSammensattISO2"))
             val noder = rootNode.at("/noder").toList()
