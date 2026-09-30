@@ -202,7 +202,6 @@ class KodeVerkHentLandkoder(
                 logger.error("Tomt svar (body er null) fra kodeverk for URI ${builder.toUriString()}")
                 throw KodeverkException("Feil ved konvetering av jsondata fra kodeverk")
             }
-            logger.info("KodeverkClient; response : $body")
             body
 
         } catch (ce: HttpClientErrorException) {
