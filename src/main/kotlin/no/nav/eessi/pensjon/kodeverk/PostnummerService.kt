@@ -48,7 +48,7 @@ class PostnummerService(
         val sted = postalCodeTable[postnr]
         return postNummerMetric.measure {
             if (sted == null) {
-                logger.error("Finner ikke poststed for postnummer: $postnr, sjekk om ny postnummer.txt må lastes ned.")
+                logger.error("Finner ikke poststed for postnummer: $postnr, nærmere undersøkelser kreves.")
                 return@measure null
             }
             return@measure sted.poststed
