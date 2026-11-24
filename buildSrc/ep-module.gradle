@@ -43,6 +43,7 @@ kotlin {
 
     compilerOptions {
         allWarningsAsErrors.set(true)
+        freeCompilerArgs.add("-Xwarning-level=DEPRECATION:warning")
     }
 }
 
